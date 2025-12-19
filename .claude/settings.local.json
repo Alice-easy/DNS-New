@@ -15,7 +15,9 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(npx next lint:*)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(dir \"C:\\\\AAA\\\\DNS-New\\\\README*.md\")",
+      "Bash(git push)"
     ]
   }
 }
