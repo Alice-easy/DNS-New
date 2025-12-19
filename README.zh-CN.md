@@ -105,6 +105,23 @@ npm run dev
 
 6. 在浏览器中打开 [http://localhost:3000](http://localhost:3000)
 
+### 更新项目
+
+当发布新版本时，按照以下步骤更新：
+
+```bash
+# 拉取最新代码
+git pull
+
+# 更新依赖
+npm install
+
+# 如有数据库结构变更，执行迁移
+npm run db:push
+```
+
+> **注意**：更新前建议备份 `data/` 目录，其中包含 SQLite 数据库。
+
 ### 创建 GitHub OAuth 应用
 
 1. 前往 [GitHub 开发者设置](https://github.com/settings/developers)

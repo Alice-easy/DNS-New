@@ -105,6 +105,23 @@ npm run dev
 
 6. ブラウザで [http://localhost:3000](http://localhost:3000) を開く
 
+### プロジェクトの更新
+
+新しいバージョンがリリースされた場合、以下の手順で更新してください：
+
+```bash
+# 最新のコードをプル
+git pull
+
+# 依存関係を更新
+npm install
+
+# データベーススキーマに変更がある場合、マイグレーションを実行
+npm run db:push
+```
+
+> **注意**：更新前に、SQLite データベースを含む `data/` ディレクトリのバックアップを推奨します。
+
 ### GitHub OAuth アプリの作成
 
 1. [GitHub 開発者設定](https://github.com/settings/developers) にアクセス
