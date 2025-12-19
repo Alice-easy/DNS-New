@@ -2,6 +2,9 @@
   "name": "dns-manager",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "esbuild": "^0.25.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
