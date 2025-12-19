@@ -3,15 +3,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
 A unified DNS management system that supports multiple DNS providers (Cloudflare, Aliyun DNS, DNSPod, etc.) with a modern web interface.
 
-[English](#features) | [简体中文](#功能特点)
+**Language / 语言 / 言語**: English | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
 ## Screenshots
 
-> 📸 Screenshots coming soon
+> Screenshots coming soon
 
 <!--
 ![Dashboard](./docs/screenshots/dashboard.png)
@@ -21,41 +21,33 @@ A unified DNS management system that supports multiple DNS providers (Cloudflare
 
 ## Features
 
-- 🌐 **Multi-Provider Support**: Manage DNS records across multiple providers from a single dashboard
-- 🔐 **Secure Authentication**: GitHub OAuth authentication with NextAuth.js
-- 📊 **Unified Dashboard**: Overview of all providers, domains, and records
-- ⚡ **Real-time Sync**: Sync domains and records from providers
-- 🎨 **Modern UI**: Built with shadcn/ui components and Tailwind CSS
-- 📱 **Responsive**: Works on desktop and mobile devices
-
-## 功能特点
-
-- 🌐 **多服务商支持**：在单一仪表盘中管理多个 DNS 服务商的记录
-- 🔐 **安全认证**：支持 GitHub OAuth 认证
-- 📊 **统一仪表盘**：概览所有服务商、域名和记录
-- ⚡ **实时同步**：从服务商同步域名和记录
-- 🎨 **现代化 UI**：使用 shadcn/ui 组件和 Tailwind CSS 构建
-- 📱 **响应式设计**：支持桌面和移动设备
+- **Multi-Provider Support**: Manage DNS records across multiple providers from a single dashboard
+- **Secure Authentication**: GitHub OAuth authentication with NextAuth.js
+- **Unified Dashboard**: Overview of all providers, domains, and records
+- **Real-time Sync**: Sync domains and records from providers
+- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
+- **Responsive Design**: Works on desktop and mobile devices
 
 ## Tech Stack
 
 | Category | Technology |
 |----------|------------|
 | Framework | Next.js 15 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS + shadcn/ui |
+| Language | TypeScript 5.0 |
+| Styling | Tailwind CSS 4 + shadcn/ui |
 | Database | SQLite with Drizzle ORM |
 | Authentication | NextAuth.js v5 |
+| Form Handling | react-hook-form |
 
 ## Supported DNS Providers
 
 | Provider | Status | Notes |
 |----------|--------|-------|
-| Cloudflare | ✅ Supported | Full API support |
-| Aliyun DNS (阿里云解析) | ✅ Supported | Full API support |
-| Tencent DNSPod (腾讯云 DNSPod) | ✅ Supported | Full API support |
-| AWS Route53 | 🔜 Coming Soon | Planned |
-| GoDaddy | 🔜 Coming Soon | Planned |
+| Cloudflare | Supported | Full API support with proxy status |
+| Aliyun DNS | Supported | Full API support |
+| Tencent DNSPod | Supported | Full API support |
+| AWS Route53 | Coming Soon | Planned |
+| GoDaddy | Coming Soon | Planned |
 
 ## Getting Started
 
@@ -150,8 +142,10 @@ The system uses an adapter pattern to support multiple DNS providers:
 
 ```typescript
 interface IDNSProvider {
+  readonly meta: ProviderMeta;
   validateCredentials(): Promise<boolean>;
   listDomains(): Promise<ProviderDomain[]>;
+  getDomain(domainId: string): Promise<ProviderDomain>;
   listRecords(domainId: string): Promise<ProviderRecord[]>;
   createRecord(domainId: string, record: CreateRecordInput): Promise<ProviderRecord>;
   updateRecord(domainId: string, recordId: string, record: UpdateRecordInput): Promise<ProviderRecord>;
@@ -179,20 +173,23 @@ npm run db:generate  # Generate migrations
 
 ## Roadmap
 
-### Phase 1 (MVP) ✅
+### Phase 1 (MVP)
+
 - [x] Project setup (Next.js, shadcn/ui, Drizzle)
 - [x] Authentication (NextAuth.js + GitHub)
 - [x] Dashboard layout
 - [x] Cloudflare provider adapter
 - [x] Domain and record management UI
 
-### Phase 2 ✅
+### Phase 2
+
 - [x] Aliyun DNS adapter
 - [x] DNSPod adapter
 - [ ] Batch operations (import/export)
-- [ ] Operation logs
+- [ ] Operation logs UI
 
 ### Phase 3
+
 - [ ] DNS monitoring
 - [ ] Change detection
 - [ ] Alert notifications
