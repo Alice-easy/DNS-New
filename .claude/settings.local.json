@@ -5,7 +5,8 @@
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 修复 Server Action 错误并更新至 Next.js 16\n\n- 添加 allowedDevOrigins 配置解决跨域开发警告\n- 新建 src/server/auth.ts 独立认证 Server Actions\n- 重构所有页面内联 Server Actions 为独立函数引用\n- 更新 README 文件版本信息（Next.js 15 → 16）\n- 更新仓库克隆链接\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 修复 Server Action 错误并更新至 Next.js 16\n\n- 添加 allowedDevOrigins 配置解决跨域开发警告\n- 新建 src/server/auth.ts 独立认证 Server Actions\n- 重构所有页面内联 Server Actions 为独立函数引用\n- 更新 README 文件版本信息（Next.js 15 → 16）\n- 更新仓库克隆链接\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
