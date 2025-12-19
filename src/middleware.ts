@@ -5,10 +5,14 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public routes that don't require authentication
-  const publicRoutes = ["/login", "/api/auth"];
+  const publicRoutes = ["/login", "/register", "/api/auth"];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   );
+
+  // Auth-only routes (redirect to home if logged in)
+  const authRoutes = ["/login", "/register"];
+  const isAuthRoute = authRoutes.includes(pathname);
 
   // Static assets
   const isStaticOrApi =
@@ -30,8 +34,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to dashboard if has session and accessing login page
-  if (sessionCookie && pathname === "/login") {
+  // Redirect to dashboard if has session and accessing auth pages
+  if (sessionCookie && isAuthRoute) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
