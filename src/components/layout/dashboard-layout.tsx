@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronDown,
   Menu,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,9 +28,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface NavItem {
-  titleKey: "dashboard" | "providers" | "domains" | "records" | "settings";
+  titleKey: "dashboard" | "providers" | "domains" | "records" | "settings" | "admin";
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -38,6 +40,7 @@ const navItems: NavItem[] = [
   { titleKey: "domains", href: "/domains", icon: Globe },
   { titleKey: "records", href: "/records", icon: FileText },
   { titleKey: "settings", href: "/settings", icon: Settings },
+  { titleKey: "admin", href: "/admin", icon: Shield, adminOnly: true },
 ];
 
 interface DashboardLayoutProps {
@@ -46,6 +49,7 @@ interface DashboardLayoutProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    role?: string;
   };
 }
 
@@ -85,9 +89,11 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => (
-          <NavLink key={item.href} item={item} />
-        ))}
+        {navItems
+          .filter((item) => !item.adminOnly || user?.role === "admin")
+          .map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
       </nav>
 
       {/* User section */}

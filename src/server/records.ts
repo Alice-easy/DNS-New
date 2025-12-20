@@ -10,8 +10,9 @@ import { validateDNSRecord } from "@/lib/dns-validation";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import type { CreateRecordInput, UpdateRecordInput } from "@/lib/providers/types";
+import { checkDomainPermission, hasPermission, type Permission } from "@/lib/permissions";
 
-async function getProviderForDomain(domainId: string, userId: string) {
+async function getProviderForDomain(domainId: string) {
   const [domain] = await db
     .select({
       id: domains.id,
@@ -22,7 +23,7 @@ async function getProviderForDomain(domainId: string, userId: string) {
     })
     .from(domains)
     .innerJoin(providers, eq(domains.providerId, providers.id))
-    .where(and(eq(domains.id, domainId), eq(providers.userId, userId)));
+    .where(eq(domains.id, domainId));
 
   if (!domain) {
     throw new Error("Domain not found");
@@ -34,6 +35,24 @@ async function getProviderForDomain(domainId: string, userId: string) {
   return { domain, provider };
 }
 
+// 检查用户对域名的权限
+async function checkRecordPermission(
+  userId: string,
+  domainId: string,
+  requiredPermission: "readonly" | "edit" | "full"
+): Promise<{ allowed: boolean; permission?: Permission }> {
+  const permissionInfo = await checkDomainPermission(userId, domainId);
+  if (!permissionInfo) {
+    return { allowed: false };
+  }
+
+  if (!hasPermission(permissionInfo.permission, requiredPermission)) {
+    return { allowed: false, permission: permissionInfo.permission };
+  }
+
+  return { allowed: true, permission: permissionInfo.permission };
+}
+
 export async function createRecord(
   domainId: string,
   input: CreateRecordInput
@@ -41,6 +60,12 @@ export async function createRecord(
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
+  }
+
+  // 检查权限 - 需要 edit 权限
+  const permCheck = await checkRecordPermission(session.user.id, domainId, "edit");
+  if (!permCheck.allowed) {
+    return { success: false, error: "Permission denied" };
   }
 
   // Validate input before sending to provider
@@ -57,10 +82,7 @@ export async function createRecord(
   }
 
   try {
-    const { domain, provider } = await getProviderForDomain(
-      domainId,
-      session.user.id
-    );
+    const { domain, provider } = await getProviderForDomain(domainId);
 
     // Create record on provider
     const remoteRecord = await provider.createRecord(domain.remoteId, input);
@@ -99,6 +121,12 @@ export async function updateRecord(
     throw new Error("Unauthorized");
   }
 
+  // 检查权限 - 需要 edit 权限
+  const permCheck = await checkRecordPermission(session.user.id, domainId, "edit");
+  if (!permCheck.allowed) {
+    return { success: false, error: "Permission denied" };
+  }
+
   // Validate input before sending to provider (only if all required fields are provided)
   if (input.type && input.name && input.content) {
     const validation = validateDNSRecord({
@@ -115,10 +143,7 @@ export async function updateRecord(
   }
 
   try {
-    const { domain, provider } = await getProviderForDomain(
-      domainId,
-      session.user.id
-    );
+    const { domain, provider } = await getProviderForDomain(domainId);
 
     // Get local record to find remote ID
     const [localRecord] = await db
@@ -168,11 +193,14 @@ export async function deleteRecord(domainId: string, recordId: string) {
     throw new Error("Unauthorized");
   }
 
+  // 检查权限 - 需要 edit 权限
+  const permCheck = await checkRecordPermission(session.user.id, domainId, "edit");
+  if (!permCheck.allowed) {
+    return { success: false, error: "Permission denied" };
+  }
+
   try {
-    const { domain, provider } = await getProviderForDomain(
-      domainId,
-      session.user.id
-    );
+    const { domain, provider } = await getProviderForDomain(domainId);
 
     // Get local record to find remote ID
     const [localRecord] = await db
