@@ -150,6 +150,27 @@ export const auditLogs = sqliteTable("audit_logs", {
   ),
 });
 
+// Record Changes (变更检测)
+export const recordChanges = sqliteTable("record_changes", {
+  id: text("id").primaryKey(),
+  domainId: text("domain_id")
+    .notNull()
+    .references(() => domains.id, { onDelete: "cascade" }),
+  recordId: text("record_id"), // 本地记录ID，删除的记录可能为null
+  remoteId: text("remote_id").notNull(), // 远程记录ID，用于匹配
+  changeType: text("change_type").notNull(), // added, modified, deleted
+  recordType: text("record_type").notNull(), // A, AAAA, CNAME, etc.
+  recordName: text("record_name").notNull(), // 记录名称
+  previousValue: text("previous_value"), // JSON: { content, ttl, priority, proxied }
+  currentValue: text("current_value"), // JSON: { content, ttl, priority, proxied }
+  changedFields: text("changed_fields"), // JSON array: ["content", "ttl"]
+  syncBatchId: text("sync_batch_id").notNull(), // 同步批次ID
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
@@ -188,6 +209,7 @@ export const domainsRelations = relations(domains, ({ one, many }) => ({
   }),
   records: many(records),
   shares: many(domainShares),
+  recordChanges: many(recordChanges),
 }));
 
 export const domainSharesRelations = relations(domainShares, ({ one }) => ({
@@ -215,6 +237,17 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   }),
 }));
 
+export const recordChangesRelations = relations(recordChanges, ({ one }) => ({
+  domain: one(domains, {
+    fields: [recordChanges.domainId],
+    references: [domains.id],
+  }),
+  user: one(users, {
+    fields: [recordChanges.userId],
+    references: [users.id],
+  }),
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -228,3 +261,5 @@ export type Record = typeof records.$inferSelect;
 export type NewRecord = typeof records.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
+export type RecordChange = typeof recordChanges.$inferSelect;
+export type NewRecordChange = typeof recordChanges.$inferInsert;

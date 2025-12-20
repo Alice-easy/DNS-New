@@ -2,13 +2,14 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { providers, domains, records } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { providers, domains, records, recordChanges } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { createProvider } from "@/lib/providers";
 import { decryptCredentials } from "@/lib/crypto";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { getUserDomains, checkDomainPermission, hasPermission } from "@/lib/permissions";
+import { detectRecordChanges } from "@/lib/change-detection";
 
 export async function getDomains() {
   const session = await auth();
@@ -115,30 +116,104 @@ export async function syncDomainRecords(domainId: string) {
     const credentials = decryptCredentials(domain.providerCredentials);
     const provider = createProvider(domain.providerName, credentials);
 
-    // Fetch records from provider
+    // 1. 获取本地记录
+    const localRecords = await db
+      .select()
+      .from(records)
+      .where(eq(records.domainId, domainId));
+
+    // 2. 获取远程记录
     const remoteRecords = await provider.listRecords(domain.remoteId);
 
-    // Delete existing records for this domain
-    await db.delete(records).where(eq(records.domainId, domainId));
+    // 3. 检测变更
+    const changes = detectRecordChanges(localRecords, remoteRecords);
 
-    // Insert new records
-    for (const record of remoteRecords) {
+    // 4. 生成同步批次ID
+    const syncBatchId = nanoid();
+
+    // 5. 记录变更（如果有变更）
+    if (changes.length > 0) {
+      for (const change of changes) {
+        await db.insert(recordChanges).values({
+          id: nanoid(),
+          domainId,
+          recordId: change.localRecordId ?? null,
+          remoteId: change.remoteId,
+          changeType: change.changeType,
+          recordType: change.recordType,
+          recordName: change.recordName,
+          previousValue: change.previousValue
+            ? JSON.stringify(change.previousValue)
+            : null,
+          currentValue: change.currentValue
+            ? JSON.stringify(change.currentValue)
+            : null,
+          changedFields: change.changedFields
+            ? JSON.stringify(change.changedFields)
+            : null,
+          syncBatchId,
+          userId: session.user.id,
+        });
+      }
+    }
+
+    // 6. 更新本地记录
+    // 删除已删除的记录
+    const deletedRemoteIds = changes
+      .filter((c) => c.changeType === "deleted")
+      .map((c) => c.remoteId);
+
+    if (deletedRemoteIds.length > 0) {
+      await db
+        .delete(records)
+        .where(
+          and(
+            eq(records.domainId, domainId),
+            inArray(records.remoteId, deletedRemoteIds)
+          )
+        );
+    }
+
+    // 插入新增的记录
+    for (const change of changes.filter((c) => c.changeType === "added")) {
+      const remoteRecord = remoteRecords.find((r) => r.id === change.remoteId)!;
       await db.insert(records).values({
         id: nanoid(),
         domainId,
-        remoteId: record.id,
-        type: record.type,
-        name: record.name,
-        content: record.content,
-        ttl: record.ttl,
-        priority: record.priority ?? null,
-        proxied: record.proxied ?? false,
-        extra: record.extra ? JSON.stringify(record.extra) : null,
+        remoteId: remoteRecord.id,
+        type: remoteRecord.type,
+        name: remoteRecord.name,
+        content: remoteRecord.content,
+        ttl: remoteRecord.ttl,
+        priority: remoteRecord.priority ?? null,
+        proxied: remoteRecord.proxied ?? false,
+        extra: remoteRecord.extra ? JSON.stringify(remoteRecord.extra) : null,
         syncedAt: new Date(),
       });
     }
 
-    // Update domain sync time
+    // 更新修改的记录
+    for (const change of changes.filter((c) => c.changeType === "modified")) {
+      const remoteRecord = remoteRecords.find((r) => r.id === change.remoteId)!;
+      await db
+        .update(records)
+        .set({
+          type: remoteRecord.type,
+          name: remoteRecord.name,
+          content: remoteRecord.content,
+          ttl: remoteRecord.ttl,
+          priority: remoteRecord.priority ?? null,
+          proxied: remoteRecord.proxied ?? false,
+          extra: remoteRecord.extra
+            ? JSON.stringify(remoteRecord.extra)
+            : null,
+          syncedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(records.id, change.localRecordId!));
+    }
+
+    // 7. 更新域名同步时间
     await db
       .update(domains)
       .set({
@@ -149,7 +224,17 @@ export async function syncDomainRecords(domainId: string) {
 
     revalidatePath(`/domains/${domainId}`);
     revalidatePath("/domains");
-    return { success: true, recordsCount: remoteRecords.length };
+    revalidatePath("/changes");
+
+    return {
+      success: true,
+      recordsCount: remoteRecords.length,
+      changes: {
+        added: changes.filter((c) => c.changeType === "added").length,
+        modified: changes.filter((c) => c.changeType === "modified").length,
+        deleted: changes.filter((c) => c.changeType === "deleted").length,
+      },
+    };
   } catch (error) {
     return {
       success: false,
