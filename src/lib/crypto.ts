@@ -10,17 +10,26 @@ const ITERATIONS = 100000;
 
 /**
  * Get encryption key from environment variable
- * In production, this should be a secure, randomly generated key
+ * Falls back to AUTH_SECRET if CREDENTIALS_ENCRYPTION_KEY is not set
+ * In production, a dedicated key is recommended for better security
  */
 function getEncryptionKey(): string {
-  const key = process.env.CREDENTIALS_ENCRYPTION_KEY;
-  if (!key) {
-    throw new Error(
-      "CREDENTIALS_ENCRYPTION_KEY environment variable is not set. " +
-      "Please generate a secure key using: openssl rand -base64 32"
-    );
+  // First try dedicated encryption key
+  const encryptionKey = process.env.CREDENTIALS_ENCRYPTION_KEY;
+  if (encryptionKey) {
+    return encryptionKey;
   }
-  return key;
+
+  // Fall back to AUTH_SECRET
+  const authSecret = process.env.AUTH_SECRET;
+  if (authSecret) {
+    return authSecret;
+  }
+
+  throw new Error(
+    "No encryption key available. " +
+    "Please set AUTH_SECRET (required) or CREDENTIALS_ENCRYPTION_KEY (optional)."
+  );
 }
 
 /**

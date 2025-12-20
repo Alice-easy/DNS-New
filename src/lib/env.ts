@@ -13,27 +13,27 @@ const ENV_CONFIGS: EnvConfig[] = [
   {
     name: "AUTH_SECRET",
     required: true,
-    description: "NextAuth.js secret for session encryption",
-  },
-  {
-    name: "CREDENTIALS_ENCRYPTION_KEY",
-    required: true,
-    description: "AES-256 encryption key for provider credentials",
+    description: "NextAuth.js secret for session encryption (also used for credentials encryption if CREDENTIALS_ENCRYPTION_KEY is not set)",
   },
   {
     name: "DATABASE_URL",
-    required: false, // Has default value
+    required: false, // Has default value: ./data/sqlite.db
     description: "SQLite database file path",
+  },
+  {
+    name: "CREDENTIALS_ENCRYPTION_KEY",
+    required: false, // Falls back to AUTH_SECRET
+    description: "Optional: Dedicated AES-256 encryption key for provider credentials",
   },
   {
     name: "GITHUB_CLIENT_ID",
     required: false, // OAuth is optional
-    description: "GitHub OAuth client ID",
+    description: "Optional: GitHub OAuth client ID",
   },
   {
     name: "GITHUB_CLIENT_SECRET",
     required: false, // OAuth is optional
-    description: "GitHub OAuth client secret",
+    description: "Optional: GitHub OAuth client secret",
   },
 ];
 
