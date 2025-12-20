@@ -12,6 +12,7 @@ export const users = sqliteTable("users", {
   emailVerified: integer("email_verified", { mode: "timestamp" }),
   password: text("password"), // Hashed password for credentials login
   image: text("image"),
+  role: text("role").notNull().default("user"), // admin, user
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
     () => new Date()
   ),
@@ -116,6 +117,24 @@ export const records = sqliteTable("records", {
   ),
 });
 
+// Domain Shares (权限分配)
+export const domainShares = sqliteTable("domain_shares", {
+  id: text("id").primaryKey(),
+  domainId: text("domain_id")
+    .notNull()
+    .references(() => domains.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  permission: text("permission").notNull(), // readonly, edit, full
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+});
+
 // Audit Logs
 export const auditLogs = sqliteTable("audit_logs", {
   id: text("id").primaryKey(),
@@ -136,6 +155,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   providers: many(providers),
+  domainShares: many(domainShares),
   auditLogs: many(auditLogs),
 }));
 
@@ -167,6 +187,18 @@ export const domainsRelations = relations(domains, ({ one, many }) => ({
     references: [providers.id],
   }),
   records: many(records),
+  shares: many(domainShares),
+}));
+
+export const domainSharesRelations = relations(domainShares, ({ one }) => ({
+  domain: one(domains, {
+    fields: [domainShares.domainId],
+    references: [domains.id],
+  }),
+  user: one(users, {
+    fields: [domainShares.userId],
+    references: [users.id],
+  }),
 }));
 
 export const recordsRelations = relations(records, ({ one }) => ({
@@ -190,6 +222,8 @@ export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
 export type Domain = typeof domains.$inferSelect;
 export type NewDomain = typeof domains.$inferInsert;
+export type DomainShare = typeof domainShares.$inferSelect;
+export type NewDomainShare = typeof domainShares.$inferInsert;
 export type Record = typeof records.$inferSelect;
 export type NewRecord = typeof records.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;

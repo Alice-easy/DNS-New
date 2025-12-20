@@ -8,6 +8,7 @@ import { createProvider } from "@/lib/providers";
 import { decryptCredentials } from "@/lib/crypto";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
+import { getUserDomains, checkDomainPermission, hasPermission } from "@/lib/permissions";
 
 export async function getDomains() {
   const session = await auth();
@@ -15,29 +16,33 @@ export async function getDomains() {
     throw new Error("Unauthorized");
   }
 
-  const userDomains = await db
-    .select({
-      id: domains.id,
-      name: domains.name,
-      status: domains.status,
-      syncedAt: domains.syncedAt,
-      createdAt: domains.createdAt,
-      providerId: domains.providerId,
-      providerName: providers.name,
-      providerLabel: providers.label,
-    })
-    .from(domains)
-    .innerJoin(providers, eq(domains.providerId, providers.id))
-    .where(eq(providers.userId, session.user.id))
-    .orderBy(domains.name);
+  // 使用新的权限系统获取用户可访问的域名
+  const userDomains = await getUserDomains(session.user.id);
 
-  return userDomains;
+  return userDomains.map((item) => ({
+    id: item.domain.id,
+    name: item.domain.name,
+    status: item.domain.status,
+    syncedAt: item.domain.syncedAt,
+    createdAt: item.domain.createdAt,
+    providerId: item.domain.providerId,
+    providerName: item.provider.name,
+    providerLabel: item.provider.label,
+    permission: item.permission,
+    isOwner: item.isOwner,
+  })).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getDomainWithRecords(domainId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
+  }
+
+  // 检查权限
+  const permission = await checkDomainPermission(session.user.id, domainId);
+  if (!permission) {
+    return null;
   }
 
   // Get domain with provider info
@@ -55,9 +60,7 @@ export async function getDomainWithRecords(domainId: string) {
     })
     .from(domains)
     .innerJoin(providers, eq(domains.providerId, providers.id))
-    .where(
-      and(eq(domains.id, domainId), eq(providers.userId, session.user.id))
-    );
+    .where(eq(domains.id, domainId));
 
   if (!domain) {
     return null;
@@ -74,6 +77,8 @@ export async function getDomainWithRecords(domainId: string) {
     ...domain,
     providerCredentials: undefined, // Don't expose
     records: domainRecords,
+    permission: permission.permission,
+    isOwner: permission.isOwner,
   };
 }
 
@@ -81,6 +86,12 @@ export async function syncDomainRecords(domainId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
+  }
+
+  // 检查权限 - 需要 full 权限才能同步
+  const permission = await checkDomainPermission(session.user.id, domainId);
+  if (!permission || !hasPermission(permission.permission, "full")) {
+    return { success: false, error: "Permission denied" };
   }
 
   // Get domain with provider
@@ -94,9 +105,7 @@ export async function syncDomainRecords(domainId: string) {
     })
     .from(domains)
     .innerJoin(providers, eq(domains.providerId, providers.id))
-    .where(
-      and(eq(domains.id, domainId), eq(providers.userId, session.user.id))
-    );
+    .where(eq(domains.id, domainId));
 
   if (!domain) {
     return { success: false, error: "Domain not found" };
