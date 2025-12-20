@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { providers, domains } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, RefreshCw, Trash2, Cloud, Server } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { syncProviderAction, deleteProviderAction } from "@/server/providers";
 import { FormattedDate } from "@/components/formatted-date";
 
@@ -68,12 +69,12 @@ function getProviderIcon(name: string) {
   }
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string, t: (key: string) => string) {
   switch (status) {
     case "active":
-      return <Badge variant="default">Active</Badge>;
+      return <Badge variant="default">{t("active")}</Badge>;
     case "error":
-      return <Badge variant="destructive">Error</Badge>;
+      return <Badge variant="destructive">{t("error")}</Badge>;
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
@@ -87,6 +88,8 @@ export default async function ProvidersPage() {
     return null;
   }
 
+  const t = await getTranslations("Providers");
+  const tCommon = await getTranslations("Common");
   const userProviders = await getUserProviders(userId);
 
   return (
@@ -94,15 +97,15 @@ export default async function ProvidersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">DNS Providers</h1>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground">
-            Manage your connected DNS providers
+            {t("subtitle")}
           </p>
         </div>
         <Button asChild>
           <Link href="/providers/new">
             <Plus className="mr-2 h-4 w-4" />
-            Add Provider
+            {t("addProvider")}
           </Link>
         </Button>
       </div>
@@ -112,14 +115,14 @@ export default async function ProvidersPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Server className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No providers yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t("noProviders")}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Connect your first DNS provider to start managing your domains.
+              {t("noProvidersDesc")}
             </p>
             <Button asChild>
               <Link href="/providers/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Provider
+                {t("addFirst")}
               </Link>
             </Button>
           </CardContent>
@@ -133,23 +136,23 @@ export default async function ProvidersPage() {
                   {getProviderIcon(provider.name)}
                   <CardTitle className="text-lg">{provider.label}</CardTitle>
                 </div>
-                {getStatusBadge(provider.status)}
+                {getStatusBadge(provider.status, tCommon)}
               </CardHeader>
               <CardContent>
                 <CardDescription className="mb-4">
                   <span className="capitalize">{provider.name}</span>
                   <span className="mx-2">•</span>
-                  {provider.domainsCount} domains
+                  {provider.domainsCount} {t("domains")}
                 </CardDescription>
 
                 <div className="text-xs text-muted-foreground mb-4">
                   {provider.lastSyncAt ? (
                     <>
-                      Last synced:{" "}
+                      {tCommon("lastSynced")}:{" "}
                       <FormattedDate date={provider.lastSyncAt} />
                     </>
                   ) : (
-                    "Never synced"
+                    t("neverSynced")
                   )}
                 </div>
 
@@ -157,14 +160,14 @@ export default async function ProvidersPage() {
                   <form action={syncProviderAction.bind(null, provider.id)}>
                     <Button type="submit" variant="outline" size="sm">
                       <RefreshCw className="mr-1 h-3 w-3" />
-                      Sync
+                      {tCommon("sync")}
                     </Button>
                   </form>
 
                   <form action={deleteProviderAction.bind(null, provider.id)}>
                     <Button type="submit" variant="destructive" size="sm">
                       <Trash2 className="mr-1 h-3 w-3" />
-                      Delete
+                      {tCommon("delete")}
                     </Button>
                   </form>
                 </div>

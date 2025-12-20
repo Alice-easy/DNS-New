@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -20,21 +21,24 @@ export default async function SettingsPage() {
     return null;
   }
 
+  const t = await getTranslations("Settings");
+  const tNav = await getTranslations("Navigation");
+
   return (
     <div className="max-w-2xl space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Manage your account settings and preferences
+          {t("subtitle")}
         </p>
       </div>
 
       {/* Profile */}
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Your personal information</CardDescription>
+          <CardTitle>{t("profile")}</CardTitle>
+          <CardDescription>{t("profileDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
@@ -54,18 +58,18 @@ export default async function SettingsPage() {
 
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Display Name</Label>
+              <Label htmlFor="name">{t("displayName")}</Label>
               <Input id="name" defaultValue={user.name || ""} disabled />
               <p className="text-xs text-muted-foreground">
-                Your display name is synced from your GitHub account
+                {t("displayNameHelp")}
               </p>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input id="email" defaultValue={user.email || ""} disabled />
               <p className="text-xs text-muted-foreground">
-                Your email is synced from your GitHub account
+                {t("emailHelp")}
               </p>
             </div>
           </div>
@@ -75,22 +79,22 @@ export default async function SettingsPage() {
       {/* Danger Zone */}
       <Card className="border-destructive">
         <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
+          <CardTitle className="text-destructive">{t("dangerZone")}</CardTitle>
           <CardDescription>
-            Irreversible and destructive actions
+            {t("dangerZoneDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Sign out of all devices</p>
+              <p className="font-medium">{t("signOutAll")}</p>
               <p className="text-sm text-muted-foreground">
-                This will sign you out everywhere
+                {t("signOutAllDesc")}
               </p>
             </div>
             <form action="/api/auth/signout" method="POST">
               <Button type="submit" variant="destructive" size="sm">
-                Sign Out
+                {tNav("signOut")}
               </Button>
             </form>
           </div>
@@ -100,16 +104,15 @@ export default async function SettingsPage() {
       {/* About */}
       <Card>
         <CardHeader>
-          <CardTitle>About</CardTitle>
+          <CardTitle>{t("about")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
-            <strong>DNS Manager</strong> - Unified DNS management across
-            multiple providers
+            <strong>DNS Manager</strong> - {t("aboutDesc")}
           </p>
-          <p>Version: 0.1.0 (MVP)</p>
+          <p>{t("version")}: 0.1.0 (MVP)</p>
           <p>
-            Built with Next.js 15, shadcn/ui, and Drizzle ORM
+            {t("builtWith")} Next.js 16, shadcn/ui, Drizzle ORM
           </p>
         </CardContent>
       </Card>

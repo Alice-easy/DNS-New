@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,6 +43,8 @@ interface AddRecordDialogProps {
 }
 
 export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) {
+  const t = useTranslations("Records");
+  const tCommon = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [recordType, setRecordType] = useState<DNSRecordType>("A");
@@ -70,13 +73,13 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
       });
 
       if (result.success) {
-        toast.success("Record created successfully");
+        toast.success(t("recordCreated"));
         setOpen(false);
       } else {
-        toast.error(result.error || "Failed to create record");
+        toast.error(result.error || t("recordCreateFailed"));
       }
-    } catch (error) {
-      toast.error("An error occurred");
+    } catch {
+      toast.error(t("recordCreateFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -84,27 +87,43 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
 
   const showPriority = recordType === "MX" || recordType === "SRV";
 
+  function getContentLabel() {
+    switch (recordType) {
+      case "A":
+      case "AAAA":
+        return t("ipAddress");
+      case "CNAME":
+        return t("target");
+      case "MX":
+        return t("mailServer");
+      case "TXT":
+        return t("recordValue");
+      default:
+        return t("recordContent");
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Add Record
+          {t("addRecord")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add DNS Record</DialogTitle>
+            <DialogTitle>{t("addRecordTitle")}</DialogTitle>
             <DialogDescription>
-              Create a new DNS record for {domainName}
+              {t("addRecordDesc", { domain: domainName })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             {/* Record Type */}
             <div className="grid gap-2">
-              <Label>Type</Label>
+              <Label>{tCommon("type")}</Label>
               <Select
                 value={recordType}
                 onValueChange={(v) => setRecordType(v as DNSRecordType)}
@@ -124,7 +143,7 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
 
             {/* Name */}
             <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{tCommon("name")}</Label>
               <div className="flex gap-2">
                 <Input
                   id="name"
@@ -137,23 +156,13 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Use @ for the root domain
+                {t("useAtForRoot")}
               </p>
             </div>
 
             {/* Content */}
             <div className="grid gap-2">
-              <Label htmlFor="content">
-                {recordType === "A" || recordType === "AAAA"
-                  ? "IP Address"
-                  : recordType === "CNAME"
-                    ? "Target"
-                    : recordType === "MX"
-                      ? "Mail Server"
-                      : recordType === "TXT"
-                        ? "Value"
-                        : "Content"}
-              </Label>
+              <Label htmlFor="content">{getContentLabel()}</Label>
               <Input
                 id="content"
                 name="content"
@@ -175,7 +184,7 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
             {/* Priority (MX, SRV) */}
             {showPriority && (
               <div className="grid gap-2">
-                <Label htmlFor="priority">Priority</Label>
+                <Label htmlFor="priority">{tCommon("priority")}</Label>
                 <Input
                   id="priority"
                   name="priority"
@@ -189,19 +198,19 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
 
             {/* TTL */}
             <div className="grid gap-2">
-              <Label htmlFor="ttl">TTL</Label>
+              <Label htmlFor="ttl">{tCommon("ttl")}</Label>
               <Select name="ttl" defaultValue="1">
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Auto</SelectItem>
-                  <SelectItem value="60">1 minute</SelectItem>
-                  <SelectItem value="300">5 minutes</SelectItem>
-                  <SelectItem value="600">10 minutes</SelectItem>
-                  <SelectItem value="1800">30 minutes</SelectItem>
-                  <SelectItem value="3600">1 hour</SelectItem>
-                  <SelectItem value="86400">1 day</SelectItem>
+                  <SelectItem value="1">{t("auto")}</SelectItem>
+                  <SelectItem value="60">{t("ttl1min")}</SelectItem>
+                  <SelectItem value="300">{t("ttl5min")}</SelectItem>
+                  <SelectItem value="600">{t("ttl10min")}</SelectItem>
+                  <SelectItem value="1800">{t("ttl30min")}</SelectItem>
+                  <SelectItem value="3600">{t("ttl1hour")}</SelectItem>
+                  <SelectItem value="86400">{t("ttl1day")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -218,7 +227,7 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
                   className="h-4 w-4"
                 />
                 <Label htmlFor="proxied" className="font-normal">
-                  Proxy through Cloudflare (orange cloud)
+                  {t("proxyCloudflare")}
                 </Label>
               </div>
             )}
@@ -230,11 +239,11 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Record
+              {t("createRecord")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,7 +1,8 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { providers, domains, records } from "@/lib/db/schema";
-import { eq, count } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileText, Globe, ExternalLink } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 async function getAllRecords(userId: string) {
   const allRecords = await db
@@ -71,15 +72,18 @@ export default async function RecordsPage() {
     return null;
   }
 
+  const t = await getTranslations("Records");
+  const tCommon = await getTranslations("Common");
+  const tNav = await getTranslations("Navigation");
   const allRecords = await getAllRecords(userId);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">All Records</h1>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
         <p className="text-muted-foreground">
-          View all DNS records across your domains
+          {t("subtitle")}
         </p>
       </div>
 
@@ -88,14 +92,14 @@ export default async function RecordsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No records yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t("noRecords")}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Sync your domains to see DNS records here.
+              {t("noRecordsDesc")}
             </p>
             <Button asChild>
               <Link href="/domains">
                 <Globe className="mr-2 h-4 w-4" />
-                Manage Domains
+                {tNav("domains")}
               </Link>
             </Button>
           </CardContent>
@@ -103,20 +107,20 @@ export default async function RecordsPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>DNS Records</CardTitle>
+            <CardTitle>{t("title")}</CardTitle>
             <CardDescription>
-              Showing {allRecords.length} records (max 100)
+              {allRecords.length} {tNav("records")} (max 100)
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-20">Type</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Content</TableHead>
-                  <TableHead>Domain</TableHead>
-                  <TableHead className="w-20 text-right">Actions</TableHead>
+                  <TableHead className="w-20">{tCommon("type")}</TableHead>
+                  <TableHead>{tCommon("name")}</TableHead>
+                  <TableHead>{tCommon("value")}</TableHead>
+                  <TableHead>{tNav("domains")}</TableHead>
+                  <TableHead className="w-20 text-right">{tCommon("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

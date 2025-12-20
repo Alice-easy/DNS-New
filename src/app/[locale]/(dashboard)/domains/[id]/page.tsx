@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDomainWithRecords, syncDomainRecords } from "@/server/domains";
+import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,12 +21,11 @@ import {
 import {
   Globe,
   RefreshCw,
-  Plus,
   ArrowLeft,
   Shield,
   ShieldOff,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { RecordActions } from "./record-actions";
 import { AddRecordDialog } from "./add-record-dialog";
 import { FormattedDate } from "@/components/formatted-date";
@@ -62,6 +62,10 @@ export default async function DomainDetailPage({
     notFound();
   }
 
+  const t = await getTranslations("Records");
+  const tCommon = await getTranslations("Common");
+  const tNav = await getTranslations("Navigation");
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -89,7 +93,7 @@ export default async function DomainDetailPage({
           >
             <Button type="submit" variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
-              Sync Records
+              {t("syncRecords")}
             </Button>
           </form>
           <AddRecordDialog domainId={id} domainName={domain.name} />
@@ -99,32 +103,31 @@ export default async function DomainDetailPage({
       {/* Records Table */}
       <Card>
         <CardHeader>
-          <CardTitle>DNS Records</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
           <CardDescription>
-            {domain.records.length} records •{" "}
+            {domain.records.length} {tNav("records")} •{" "}
             {domain.syncedAt
-              ? <>Last synced <FormattedDate date={domain.syncedAt} /></>
-              : "Never synced"}
+              ? <>{t("lastSynced")} <FormattedDate date={domain.syncedAt} /></>
+              : t("neverSynced")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {domain.records.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">
-                No records found. Click "Sync Records" to fetch records from the
-                provider, or add a new record.
+                {t("noRecordsHint")}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-20">Type</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Content</TableHead>
-                  <TableHead className="w-20">TTL</TableHead>
-                  <TableHead className="w-20">Proxy</TableHead>
-                  <TableHead className="w-20 text-right">Actions</TableHead>
+                  <TableHead className="w-20">{tCommon("type")}</TableHead>
+                  <TableHead>{tCommon("name")}</TableHead>
+                  <TableHead>{t("recordContent")}</TableHead>
+                  <TableHead className="w-20">{tCommon("ttl")}</TableHead>
+                  <TableHead className="w-20">{t("recordProxy")}</TableHead>
+                  <TableHead className="w-20 text-right">{tCommon("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -145,7 +148,7 @@ export default async function DomainDetailPage({
                       {record.content}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {record.ttl === 1 ? "Auto" : `${record.ttl}s`}
+                      {record.ttl === 1 ? t("auto") : `${record.ttl}s`}
                     </TableCell>
                     <TableCell>
                       {record.proxied ? (

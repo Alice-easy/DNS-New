@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -52,6 +53,8 @@ export function RecordActions({
   record,
   domainName,
 }: RecordActionsProps) {
+  const t = useTranslations("Records");
+  const tCommon = useTranslations("Common");
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,13 +76,13 @@ export function RecordActions({
       });
 
       if (result.success) {
-        toast.success("Record updated successfully");
+        toast.success(t("recordUpdated"));
         setEditOpen(false);
       } else {
-        toast.error(result.error || "Failed to update record");
+        toast.error(result.error || t("recordUpdateFailed"));
       }
-    } catch (error) {
-      toast.error("An error occurred");
+    } catch {
+      toast.error(t("recordUpdateFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -92,13 +95,13 @@ export function RecordActions({
       const result = await deleteRecord(domainId, record.id);
 
       if (result.success) {
-        toast.success("Record deleted successfully");
+        toast.success(t("recordDeleted"));
         setDeleteOpen(false);
       } else {
-        toast.error(result.error || "Failed to delete record");
+        toast.error(result.error || t("recordDeleteFailed"));
       }
-    } catch (error) {
-      toast.error("An error occurred");
+    } catch {
+      toast.error(t("recordDeleteFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -115,13 +118,13 @@ export function RecordActions({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
             <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">{tCommon("actions")}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
-            Edit
+            {tCommon("edit")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -129,7 +132,7 @@ export function RecordActions({
             className="text-destructive"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {tCommon("delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -139,15 +142,15 @@ export function RecordActions({
         <DialogContent>
           <form onSubmit={handleEdit}>
             <DialogHeader>
-              <DialogTitle>Edit Record</DialogTitle>
+              <DialogTitle>{t("editRecord")}</DialogTitle>
               <DialogDescription>
-                {record.type} record for {displayName}
+                {t("editRecordDesc", { type: record.type, name: displayName })}
               </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="content">Content</Label>
+                <Label htmlFor="content">{t("recordContent")}</Label>
                 <Input
                   id="content"
                   name="content"
@@ -157,19 +160,19 @@ export function RecordActions({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="ttl">TTL</Label>
+                <Label htmlFor="ttl">{tCommon("ttl")}</Label>
                 <Select name="ttl" defaultValue={String(record.ttl)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">Auto</SelectItem>
-                    <SelectItem value="60">1 minute</SelectItem>
-                    <SelectItem value="300">5 minutes</SelectItem>
-                    <SelectItem value="600">10 minutes</SelectItem>
-                    <SelectItem value="1800">30 minutes</SelectItem>
-                    <SelectItem value="3600">1 hour</SelectItem>
-                    <SelectItem value="86400">1 day</SelectItem>
+                    <SelectItem value="1">{t("auto")}</SelectItem>
+                    <SelectItem value="60">{t("ttl1min")}</SelectItem>
+                    <SelectItem value="300">{t("ttl5min")}</SelectItem>
+                    <SelectItem value="600">{t("ttl10min")}</SelectItem>
+                    <SelectItem value="1800">{t("ttl30min")}</SelectItem>
+                    <SelectItem value="3600">{t("ttl1hour")}</SelectItem>
+                    <SelectItem value="86400">{t("ttl1day")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -186,7 +189,7 @@ export function RecordActions({
                     className="h-4 w-4"
                   />
                   <Label htmlFor="proxied" className="font-normal">
-                    Proxy through Cloudflare
+                    {t("proxyCloudflare")}
                   </Label>
                 </div>
               )}
@@ -198,11 +201,11 @@ export function RecordActions({
                 variant="outline"
                 onClick={() => setEditOpen(false)}
               >
-                Cancel
+                {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
+                {t("saveChanges")}
               </Button>
             </DialogFooter>
           </form>
@@ -213,21 +216,20 @@ export function RecordActions({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Record?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteRecordTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the {record.type} record for{" "}
-              <strong>{displayName}</strong>. This action cannot be undone.
+              {t("deleteRecordDesc", { type: record.type, name: displayName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
+              {tCommon("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

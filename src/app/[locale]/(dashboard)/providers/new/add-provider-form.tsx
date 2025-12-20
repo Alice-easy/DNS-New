@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Loader2, Cloud, Server } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { addProvider } from "@/server/providers";
 import { toast } from "sonner";
 import type { ProviderMeta } from "@/lib/providers/types";
@@ -52,6 +53,8 @@ function getProviderIcon(name: string) {
 
 export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
   const router = useRouter();
+  const t = useTranslations("Providers");
+  const tCommon = useTranslations("Common");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,13 +67,13 @@ export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
     try {
       const result = await addProvider(formData);
       if (result.success) {
-        toast.success("Provider added successfully");
+        toast.success(t("providerAdded"));
         router.push("/providers");
       } else {
-        toast.error(result.error || "Failed to add provider");
+        toast.error(result.error || t("providerAddFailed"));
       }
-    } catch (error) {
-      toast.error("An error occurred");
+    } catch {
+      toast.error(t("providerAddFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -81,9 +84,9 @@ export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
       {/* Provider Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Select Provider</CardTitle>
+          <CardTitle>{t("selectProviderCard")}</CardTitle>
           <CardDescription>
-            Choose a DNS provider to connect to your account
+            {t("selectProviderDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -93,7 +96,7 @@ export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
             onValueChange={setSelectedProvider}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a provider" />
+              <SelectValue placeholder={t("selectProvider")} />
             </SelectTrigger>
             <SelectContent>
               {availableProviders.map((provider) => (
@@ -115,21 +118,21 @@ export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {getProviderIcon(providerMeta.name)}
-              Configure {providerMeta.displayName}
+              {t("configureProvider", { provider: providerMeta.displayName })}
             </CardTitle>
             <CardDescription>{providerMeta.description}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Label */}
             <div className="space-y-2">
-              <Label htmlFor="label">Display Name (optional)</Label>
+              <Label htmlFor="label">{t("displayNameOptional")}</Label>
               <Input
                 id="label"
                 name="label"
-                placeholder={`My ${providerMeta.displayName}`}
+                placeholder={t("labelPlaceholder")}
               />
               <p className="text-xs text-muted-foreground">
-                A friendly name to identify this provider
+                {t("labelHelp")}
               </p>
             </div>
 
@@ -159,14 +162,14 @@ export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
 
             {/* Website Link */}
             <p className="text-sm text-muted-foreground">
-              Need an API token?{" "}
+              {t("needApiToken")}{" "}
               <a
                 href={providerMeta.website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                Visit {providerMeta.displayName}
+                {t("visitProvider", { provider: providerMeta.displayName })}
               </a>
             </p>
           </CardContent>
@@ -178,12 +181,12 @@ export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
         <Button type="button" variant="outline" asChild>
           <Link href="/providers">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Cancel
+            {tCommon("cancel")}
           </Link>
         </Button>
         <Button type="submit" disabled={!selectedProvider || isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Add Provider
+          {t("addProviderBtn")}
         </Button>
       </div>
     </form>

@@ -1,7 +1,5 @@
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { providers, domains, records } from "@/lib/db/schema";
-import { eq, count } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,23 +18,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Globe, RefreshCw, ExternalLink, Server } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getDomains } from "@/server/domains";
 import { syncProviderAction } from "@/server/providers";
 import { FormattedDate } from "@/components/formatted-date";
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string, t: (key: string) => string) {
   switch (status) {
     case "active":
       return (
         <Badge variant="default" className="bg-green-600">
-          Active
+          {t("active")}
         </Badge>
       );
     case "pending":
-      return <Badge variant="secondary">Pending</Badge>;
+      return <Badge variant="secondary">{t("pending")}</Badge>;
     case "error":
-      return <Badge variant="destructive">Error</Badge>;
+      return <Badge variant="destructive">{t("error")}</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -48,6 +46,8 @@ export default async function DomainsPage() {
     return null;
   }
 
+  const t = await getTranslations("Domains");
+  const tCommon = await getTranslations("Common");
   const userDomains = await getDomains();
 
   // Group domains by provider
@@ -81,9 +81,9 @@ export default async function DomainsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Domains</h1>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground">
-            Manage DNS records for your domains
+            {t("subtitle")}
           </p>
         </div>
       </div>
@@ -93,14 +93,14 @@ export default async function DomainsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Globe className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No domains yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t("noDomains")}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Add a DNS provider and sync your domains to get started.
+              {t("noDomainsDesc")}
             </p>
             <Button asChild>
               <Link href="/providers">
                 <Server className="mr-2 h-4 w-4" />
-                Manage Providers
+                {t("manageProviders")}
               </Link>
             </Button>
           </CardContent>
@@ -115,13 +115,13 @@ export default async function DomainsPage() {
                     {group.providerLabel}
                   </CardTitle>
                   <CardDescription className="capitalize">
-                    {group.providerName} • {group.domains.length} domains
+                    {group.providerName} • {group.domains.length} {t("records")}
                   </CardDescription>
                 </div>
                 <form action={syncProviderAction.bind(null, group.providerId)}>
                   <Button type="submit" variant="outline" size="sm">
                     <RefreshCw className="mr-1 h-3 w-3" />
-                    Sync All
+                    {tCommon("syncAll")}
                   </Button>
                 </form>
               </CardHeader>
@@ -129,10 +129,10 @@ export default async function DomainsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Domain</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Last Synced</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t("domain")}</TableHead>
+                      <TableHead>{tCommon("status")}</TableHead>
+                      <TableHead>{tCommon("lastSynced")}</TableHead>
+                      <TableHead className="text-right">{tCommon("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -144,16 +144,16 @@ export default async function DomainsPage() {
                             <span className="font-medium">{domain.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{getStatusBadge(domain.status)}</TableCell>
+                        <TableCell>{getStatusBadge(domain.status, tCommon)}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {domain.syncedAt
                             ? <FormattedDate date={domain.syncedAt} />
-                            : "Never"}
+                            : tCommon("never")}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button asChild variant="ghost" size="sm">
                             <Link href={`/domains/${domain.id}`}>
-                              Manage
+                              {tCommon("manage")}
                               <ExternalLink className="ml-1 h-3 w-3" />
                             </Link>
                           </Button>
