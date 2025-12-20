@@ -240,8 +240,9 @@ npm run db:generate  # Generate migrations
 - [x] Aliyun DNS adapter
 - [x] DNSPod adapter
 - [x] Internationalization (EN/ZH/JA)
-- [ ] Batch operations (import/export)
-- [ ] Operation logs UI
+- [x] Batch operations (import/export)
+- [x] Operation logs UI
+- [x] Multi-user management with permissions
 
 ### Phase 3
 

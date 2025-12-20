@@ -28,6 +28,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { RecordActions } from "./record-actions";
 import { AddRecordDialog } from "./add-record-dialog";
+import { BatchOperations } from "./batch-operations";
 import { FormattedDate } from "@/components/formatted-date";
 
 interface DomainDetailPageProps {
@@ -85,6 +86,7 @@ export default async function DomainDetailPage({
           </p>
         </div>
         <div className="flex gap-2">
+          <BatchOperations domainId={id} domainName={domain.name} />
           <form
             action={async () => {
               "use server";

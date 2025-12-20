@@ -9,7 +9,7 @@ import { decryptCredentials } from "@/lib/crypto";
 import { validateDNSRecord } from "@/lib/dns-validation";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
-import type { CreateRecordInput, UpdateRecordInput } from "@/lib/providers/types";
+import type { CreateRecordInput, UpdateRecordInput, DNSRecordType } from "@/lib/providers/types";
 import { checkDomainPermission, hasPermission, type Permission } from "@/lib/permissions";
 
 async function getProviderForDomain(domainId: string) {
@@ -224,6 +224,205 @@ export async function deleteRecord(domainId: string, recordId: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete record",
+    };
+  }
+}
+
+// Type for exported record (uses string for type to allow import from external sources)
+export interface ExportedRecord {
+  type: string;
+  name: string;
+  content: string;
+  ttl: number;
+  priority?: number;
+  proxied?: boolean;
+}
+
+// Valid DNS record types for validation
+const VALID_RECORD_TYPES: DNSRecordType[] = ["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SRV", "CAA", "PTR"];
+
+function isValidRecordType(type: string): type is DNSRecordType {
+  return VALID_RECORD_TYPES.includes(type.toUpperCase() as DNSRecordType);
+}
+
+// Export records for a domain
+export async function exportRecords(
+  domainId: string,
+  format: "json" | "csv" = "json"
+): Promise<{ success: boolean; data?: string; filename?: string; error?: string }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  // 检查权限 - 只读权限即可
+  const permCheck = await checkRecordPermission(session.user.id, domainId, "readonly");
+  if (!permCheck.allowed) {
+    return { success: false, error: "Permission denied" };
+  }
+
+  try {
+    // Get domain info
+    const [domain] = await db
+      .select({ name: domains.name })
+      .from(domains)
+      .where(eq(domains.id, domainId));
+
+    if (!domain) {
+      return { success: false, error: "Domain not found" };
+    }
+
+    // Get all records for the domain
+    const domainRecords = await db
+      .select({
+        type: records.type,
+        name: records.name,
+        content: records.content,
+        ttl: records.ttl,
+        priority: records.priority,
+        proxied: records.proxied,
+      })
+      .from(records)
+      .where(eq(records.domainId, domainId));
+
+    const exportData: ExportedRecord[] = domainRecords.map((r) => ({
+      type: r.type,
+      name: r.name,
+      content: r.content,
+      ttl: r.ttl,
+      priority: r.priority ?? undefined,
+      proxied: r.proxied ?? undefined,
+    }));
+
+    const timestamp = new Date().toISOString().split("T")[0];
+    const filename = `${domain.name}-dns-records-${timestamp}`;
+
+    if (format === "json") {
+      return {
+        success: true,
+        data: JSON.stringify(exportData, null, 2),
+        filename: `${filename}.json`,
+      };
+    } else {
+      // CSV format
+      const headers = ["type", "name", "content", "ttl", "priority", "proxied"];
+      const csvRows = [
+        headers.join(","),
+        ...exportData.map((r) =>
+          [
+            r.type,
+            `"${r.name}"`,
+            `"${r.content.replace(/"/g, '""')}"`,
+            r.ttl,
+            r.priority ?? "",
+            r.proxied ?? "",
+          ].join(",")
+        ),
+      ];
+      return {
+        success: true,
+        data: csvRows.join("\n"),
+        filename: `${filename}.csv`,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to export records",
+    };
+  }
+}
+
+// Import records for a domain
+export async function importRecords(
+  domainId: string,
+  recordsData: ExportedRecord[]
+): Promise<{ success: boolean; imported: number; failed: number; errors: string[] }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  // 检查权限 - 需要 edit 权限
+  const permCheck = await checkRecordPermission(session.user.id, domainId, "edit");
+  if (!permCheck.allowed) {
+    return { success: false, imported: 0, failed: 0, errors: ["Permission denied"] };
+  }
+
+  let imported = 0;
+  let failed = 0;
+  const errors: string[] = [];
+
+  try {
+    const { domain, provider } = await getProviderForDomain(domainId);
+
+    for (const recordData of recordsData) {
+      try {
+        // Validate record type
+        const recordType = recordData.type.toUpperCase();
+        if (!isValidRecordType(recordType)) {
+          errors.push(`${recordData.name}: Invalid record type "${recordData.type}"`);
+          failed++;
+          continue;
+        }
+
+        // Validate each record
+        const validation = validateDNSRecord({
+          type: recordType,
+          name: recordData.name,
+          content: recordData.content,
+          ttl: recordData.ttl,
+          priority: recordData.priority,
+        });
+
+        if (!validation.valid) {
+          errors.push(`${recordData.name}: ${validation.error}`);
+          failed++;
+          continue;
+        }
+
+        // Create record on provider
+        const input: CreateRecordInput = {
+          type: recordType,
+          name: recordData.name,
+          content: recordData.content,
+          ttl: recordData.ttl,
+          priority: recordData.priority,
+          proxied: recordData.proxied,
+        };
+
+        const remoteRecord = await provider.createRecord(domain.remoteId, input);
+
+        // Save to local database
+        await db.insert(records).values({
+          id: nanoid(),
+          domainId,
+          remoteId: remoteRecord.id,
+          type: remoteRecord.type,
+          name: remoteRecord.name,
+          content: remoteRecord.content,
+          ttl: remoteRecord.ttl,
+          priority: remoteRecord.priority ?? null,
+          proxied: remoteRecord.proxied ?? false,
+          syncedAt: new Date(),
+        });
+
+        imported++;
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
+        errors.push(`${recordData.name}: ${errorMsg}`);
+        failed++;
+      }
+    }
+
+    revalidatePath(`/domains/${domainId}`);
+    return { success: true, imported, failed, errors };
+  } catch (error) {
+    return {
+      success: false,
+      imported,
+      failed,
+      errors: [error instanceof Error ? error.message : "Failed to import records"],
     };
   }
 }
