@@ -330,6 +330,157 @@ export const monitorResultsRelations = relations(monitorResults, ({ one }) => ({
   }),
 }));
 
+// Alert Rules (告警规则)
+export const alertRules = sqliteTable("alert_rules", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // 规则名称
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  // 触发条件
+  triggerType: text("trigger_type").notNull(), // monitor_failed, monitor_latency, record_changed
+  // 条件配置 (JSON)
+  conditions: text("conditions").notNull(), // { domainId?, recordId?, taskId?, threshold?, changeTypes? }
+  // 触发设置
+  consecutiveFailures: integer("consecutive_failures").notNull().default(1), // 连续失败次数触发
+  cooldownMinutes: integer("cooldown_minutes").notNull().default(30), // 冷却时间(分钟)
+  lastTriggeredAt: integer("last_triggered_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+});
+
+// Notification Channels (通知渠道)
+export const notificationChannels = sqliteTable("notification_channels", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // 渠道名称
+  type: text("type").notNull(), // email, webhook, telegram, discord
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  // 渠道配置 (JSON)
+  config: text("config").notNull(), // { email?, webhookUrl?, telegramChatId?, discordWebhookUrl? }
+  // 验证状态
+  verified: integer("verified", { mode: "boolean" }).notNull().default(false),
+  lastTestAt: integer("last_test_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+});
+
+// Alert Rule Channels (规则-渠道关联)
+export const alertRuleChannels = sqliteTable("alert_rule_channels", {
+  id: text("id").primaryKey(),
+  ruleId: text("rule_id")
+    .notNull()
+    .references(() => alertRules.id, { onDelete: "cascade" }),
+  channelId: text("channel_id")
+    .notNull()
+    .references(() => notificationChannels.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+});
+
+// Alert History (告警历史)
+export const alertHistory = sqliteTable("alert_history", {
+  id: text("id").primaryKey(),
+  ruleId: text("rule_id")
+    .notNull()
+    .references(() => alertRules.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  // 告警内容
+  status: text("status").notNull(), // triggered, resolved, acknowledged
+  severity: text("severity").notNull().default("warning"), // info, warning, critical
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  // 关联资源
+  domainId: text("domain_id").references(() => domains.id, { onDelete: "set null" }),
+  recordId: text("record_id").references(() => records.id, { onDelete: "set null" }),
+  taskId: text("task_id").references(() => monitorTasks.id, { onDelete: "set null" }),
+  // 触发详情 (JSON)
+  triggerData: text("trigger_data"), // { checkResult?, changeDetails?, ... }
+  // 通知状态
+  notificationsSent: integer("notifications_sent").notNull().default(0),
+  notificationsFailed: integer("notifications_failed").notNull().default(0),
+  // 时间戳
+  triggeredAt: integer("triggered_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+  acknowledgedAt: integer("acknowledged_at", { mode: "timestamp" }),
+  acknowledgedBy: text("acknowledged_by").references(() => users.id, { onDelete: "set null" }),
+});
+
+// Alert Rules Relations
+export const alertRulesRelations = relations(alertRules, ({ one, many }) => ({
+  user: one(users, {
+    fields: [alertRules.userId],
+    references: [users.id],
+  }),
+  channels: many(alertRuleChannels),
+  history: many(alertHistory),
+}));
+
+// Notification Channels Relations
+export const notificationChannelsRelations = relations(notificationChannels, ({ one, many }) => ({
+  user: one(users, {
+    fields: [notificationChannels.userId],
+    references: [users.id],
+  }),
+  alertRuleChannels: many(alertRuleChannels),
+}));
+
+// Alert Rule Channels Relations
+export const alertRuleChannelsRelations = relations(alertRuleChannels, ({ one }) => ({
+  rule: one(alertRules, {
+    fields: [alertRuleChannels.ruleId],
+    references: [alertRules.id],
+  }),
+  channel: one(notificationChannels, {
+    fields: [alertRuleChannels.channelId],
+    references: [notificationChannels.id],
+  }),
+}));
+
+// Alert History Relations
+export const alertHistoryRelations = relations(alertHistory, ({ one }) => ({
+  rule: one(alertRules, {
+    fields: [alertHistory.ruleId],
+    references: [alertRules.id],
+  }),
+  user: one(users, {
+    fields: [alertHistory.userId],
+    references: [users.id],
+  }),
+  domain: one(domains, {
+    fields: [alertHistory.domainId],
+    references: [domains.id],
+  }),
+  record: one(records, {
+    fields: [alertHistory.recordId],
+    references: [records.id],
+  }),
+  task: one(monitorTasks, {
+    fields: [alertHistory.taskId],
+    references: [monitorTasks.id],
+  }),
+  acknowledgedByUser: one(users, {
+    fields: [alertHistory.acknowledgedBy],
+    references: [users.id],
+  }),
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -349,3 +500,11 @@ export type MonitorTask = typeof monitorTasks.$inferSelect;
 export type NewMonitorTask = typeof monitorTasks.$inferInsert;
 export type MonitorResult = typeof monitorResults.$inferSelect;
 export type NewMonitorResult = typeof monitorResults.$inferInsert;
+export type AlertRule = typeof alertRules.$inferSelect;
+export type NewAlertRule = typeof alertRules.$inferInsert;
+export type NotificationChannel = typeof notificationChannels.$inferSelect;
+export type NewNotificationChannel = typeof notificationChannels.$inferInsert;
+export type AlertRuleChannel = typeof alertRuleChannels.$inferSelect;
+export type NewAlertRuleChannel = typeof alertRuleChannels.$inferInsert;
+export type AlertHistoryItem = typeof alertHistory.$inferSelect;
+export type NewAlertHistoryItem = typeof alertHistory.$inferInsert;
