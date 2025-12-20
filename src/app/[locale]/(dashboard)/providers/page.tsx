@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, RefreshCw, Trash2, Cloud, Server } from "lucide-react";
 import Link from "next/link";
 import { syncProviderAction, deleteProviderAction } from "@/server/providers";
+import { FormattedDate } from "@/components/formatted-date";
 
 async function getUserProviders(userId: string) {
   const userProviders = await db
@@ -145,7 +146,7 @@ export default async function ProvidersPage() {
                   {provider.lastSyncAt ? (
                     <>
                       Last synced:{" "}
-                      {new Date(provider.lastSyncAt).toLocaleString()}
+                      <FormattedDate date={provider.lastSyncAt} />
                     </>
                   ) : (
                     "Never synced"

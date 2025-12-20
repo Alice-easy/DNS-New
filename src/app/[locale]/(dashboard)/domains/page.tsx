@@ -23,6 +23,7 @@ import { Globe, RefreshCw, ExternalLink, Server } from "lucide-react";
 import Link from "next/link";
 import { getDomains } from "@/server/domains";
 import { syncProviderAction } from "@/server/providers";
+import { FormattedDate } from "@/components/formatted-date";
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -146,7 +147,7 @@ export default async function DomainsPage() {
                         <TableCell>{getStatusBadge(domain.status)}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {domain.syncedAt
-                            ? new Date(domain.syncedAt).toLocaleString()
+                            ? <FormattedDate date={domain.syncedAt} />
                             : "Never"}
                         </TableCell>
                         <TableCell className="text-right">

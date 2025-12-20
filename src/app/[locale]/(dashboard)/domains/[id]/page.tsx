@@ -28,6 +28,7 @@ import {
 import Link from "next/link";
 import { RecordActions } from "./record-actions";
 import { AddRecordDialog } from "./add-record-dialog";
+import { FormattedDate } from "@/components/formatted-date";
 
 interface DomainDetailPageProps {
   params: Promise<{ id: string }>;
@@ -102,7 +103,7 @@ export default async function DomainDetailPage({
           <CardDescription>
             {domain.records.length} records •{" "}
             {domain.syncedAt
-              ? `Last synced ${new Date(domain.syncedAt).toLocaleString()}`
+              ? <>Last synced <FormattedDate date={domain.syncedAt} /></>
               : "Never synced"}
           </CardDescription>
         </CardHeader>
