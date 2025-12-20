@@ -164,7 +164,11 @@
     "recordDeleted": "Record deleted successfully",
     "recordCreateFailed": "Failed to create record",
     "recordUpdateFailed": "Failed to update record",
-    "recordDeleteFailed": "Failed to delete record"
+    "recordDeleteFailed": "Failed to delete record",
+    "dnsLine": "DNS Line",
+    "selectLine": "Select a line",
+    "dnsLineDesc": "Choose a DNS line for geo-based routing (e.g., Telecom, Unicom, Mobile)",
+    "loading": "Loading..."
   },
   "Settings": {
     "title": "Settings",

@@ -107,6 +107,9 @@ export const records = sqliteTable("records", {
   ttl: integer("ttl").notNull().default(300),
   priority: integer("priority"), // For MX records
   proxied: integer("proxied", { mode: "boolean" }).default(false), // Cloudflare proxy
+  // 智能解析线路 (用于阿里云、腾讯云等支持线路的服务商)
+  line: text("line"), // 线路名称: 默认, 电信, 联通, 移动, 海外等
+  lineId: text("line_id"), // 线路ID (服务商特定): default, telecom, unicom, etc.
   extra: text("extra"), // Additional provider-specific data (JSON)
   syncedAt: integer("synced_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
@@ -481,80 +484,6 @@ export const alertHistoryRelations = relations(alertHistory, ({ one }) => ({
   }),
 }));
 
-// Geo Routing Rules (智能 DNS 地理路由规则)
-export const geoRoutingRules = sqliteTable("geo_routing_rules", {
-  id: text("id").primaryKey(),
-  domainId: text("domain_id")
-    .notNull()
-    .references(() => domains.id, { onDelete: "cascade" }),
-  name: text("name").notNull(), // 规则名称
-  recordName: text("record_name").notNull(), // DNS 记录名称 (@ 或子域名)
-  recordType: text("record_type").notNull().default("A"), // A, AAAA, CNAME
-  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
-  // 默认目标 (当没有匹配的地理规则时使用)
-  defaultTarget: text("default_target").notNull(), // IP 或域名
-  defaultTtl: integer("default_ttl").notNull().default(300),
-  // 负载均衡策略
-  loadBalancing: text("load_balancing").notNull().default("round_robin"), // round_robin, weighted, failover
-  // 健康检查配置
-  healthCheck: integer("health_check", { mode: "boolean" }).notNull().default(false),
-  healthCheckInterval: integer("health_check_interval").default(60), // 秒
-  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
-    () => new Date()
-  ),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(
-    () => new Date()
-  ),
-});
-
-// Geo Routing Targets (地理路由目标)
-export const geoRoutingTargets = sqliteTable("geo_routing_targets", {
-  id: text("id").primaryKey(),
-  ruleId: text("rule_id")
-    .notNull()
-    .references(() => geoRoutingRules.id, { onDelete: "cascade" }),
-  // 地理匹配条件
-  region: text("region").notNull(), // 地区代码: AS, EU, NA, SA, AF, OC, CN, US, JP, etc.
-  country: text("country"), // 国家代码 (可选，更精确): CN, US, JP, DE, etc.
-  // 目标配置
-  target: text("target").notNull(), // IP 地址或域名
-  ttl: integer("ttl").notNull().default(300),
-  weight: integer("weight").notNull().default(100), // 权重 (用于 weighted 负载均衡)
-  priority: integer("priority").notNull().default(0), // 优先级 (用于 failover)
-  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
-  // 健康状态
-  isHealthy: integer("is_healthy", { mode: "boolean" }).notNull().default(true),
-  lastHealthCheck: integer("last_health_check", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
-    () => new Date()
-  ),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(
-    () => new Date()
-  ),
-});
-
-// Geo Routing Rules Relations
-export const geoRoutingRulesRelations = relations(geoRoutingRules, ({ one, many }) => ({
-  domain: one(domains, {
-    fields: [geoRoutingRules.domainId],
-    references: [domains.id],
-  }),
-  createdByUser: one(users, {
-    fields: [geoRoutingRules.createdBy],
-    references: [users.id],
-  }),
-  targets: many(geoRoutingTargets),
-}));
-
-// Geo Routing Targets Relations
-export const geoRoutingTargetsRelations = relations(geoRoutingTargets, ({ one }) => ({
-  rule: one(geoRoutingRules, {
-    fields: [geoRoutingTargets.ruleId],
-    references: [geoRoutingRules.id],
-  }),
-}));
-
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -582,7 +511,3 @@ export type AlertRuleChannel = typeof alertRuleChannels.$inferSelect;
 export type NewAlertRuleChannel = typeof alertRuleChannels.$inferInsert;
 export type AlertHistoryItem = typeof alertHistory.$inferSelect;
 export type NewAlertHistoryItem = typeof alertHistory.$inferInsert;
-export type GeoRoutingRule = typeof geoRoutingRules.$inferSelect;
-export type NewGeoRoutingRule = typeof geoRoutingRules.$inferInsert;
-export type GeoRoutingTarget = typeof geoRoutingTargets.$inferSelect;
-export type NewGeoRoutingTarget = typeof geoRoutingTargets.$inferInsert;

@@ -98,6 +98,8 @@ export async function createRecord(
       ttl: remoteRecord.ttl,
       priority: remoteRecord.priority ?? null,
       proxied: remoteRecord.proxied ?? false,
+      line: remoteRecord.line ?? null,
+      lineId: remoteRecord.lineId ?? null,
       syncedAt: new Date(),
     });
 
@@ -172,6 +174,8 @@ export async function updateRecord(
         ttl: remoteRecord.ttl,
         priority: remoteRecord.priority ?? null,
         proxied: remoteRecord.proxied ?? false,
+        line: remoteRecord.line ?? null,
+        lineId: remoteRecord.lineId ?? null,
         syncedAt: new Date(),
         updatedAt: new Date(),
       })
@@ -423,6 +427,73 @@ export async function importRecords(
       imported,
       failed,
       errors: [error instanceof Error ? error.message : "Failed to import records"],
+    };
+  }
+}
+
+// 获取域名可用的解析线路列表
+export async function getDomainLines(domainId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  // 检查权限 - 只读权限即可
+  const permCheck = await checkRecordPermission(session.user.id, domainId, "readonly");
+  if (!permCheck.allowed) {
+    return { success: false, error: "Permission denied", lines: [] };
+  }
+
+  try {
+    const { domain, provider } = await getProviderForDomain(domainId);
+
+    // 检查 provider 是否支持线路功能
+    if (!provider.listLines) {
+      // 返回默认线路（适用于不支持智能解析的服务商，如 Cloudflare）
+      return {
+        success: true,
+        lines: [{ id: "default", name: "默认" }],
+        supportsLines: false,
+      };
+    }
+
+    const lines = await provider.listLines(domain.remoteId);
+    return {
+      success: true,
+      lines,
+      supportsLines: true,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get lines",
+      lines: [],
+    };
+  }
+}
+
+// 获取服务商是否支持线路功能
+export async function getProviderFeatures(domainId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const { provider } = await getProviderForDomain(domainId);
+    return {
+      success: true,
+      features: {
+        geoRouting: provider.meta.features.geoRouting ?? false,
+        proxied: provider.meta.features.proxied ?? false,
+        loadBalancing: provider.meta.features.loadBalancing ?? false,
+      },
+      providerName: provider.meta.name,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get provider features",
     };
   }
 }

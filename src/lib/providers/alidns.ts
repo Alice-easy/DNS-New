@@ -13,6 +13,7 @@ import {
   CreateRecordInput,
   UpdateRecordInput,
   DNSRecordType,
+  DNSLine,
   AuthenticationError,
   RateLimitError,
   RecordNotFoundError,
@@ -54,6 +55,18 @@ interface AliyunRecord {
 interface AliyunRecordList {
   DomainRecords: { Record: AliyunRecord[] };
   TotalCount: number;
+}
+
+// 阿里云解析线路响应
+interface AliyunRecordLine {
+  LineCode: string;
+  LineName: string;
+  LineDisplayName: string;
+  FatherCode?: string;
+}
+
+interface AliyunRecordLineList {
+  RecordLines: { RecordLine: AliyunRecordLine[] };
 }
 
 export class AliyunDNSProvider implements IDNSProvider {
@@ -242,6 +255,13 @@ export class AliyunDNSProvider implements IDNSProvider {
       params.Priority = String(input.priority);
     }
 
+    // 智能解析线路支持
+    if (input.lineId) {
+      params.Line = input.lineId;
+    } else if (input.line) {
+      params.Line = input.line;
+    }
+
     const data = await this.request<{ RecordId: string }>("AddDomainRecord", params);
 
     return {
@@ -251,6 +271,8 @@ export class AliyunDNSProvider implements IDNSProvider {
       content: input.content,
       ttl: input.ttl || 600,
       priority: input.priority,
+      line: input.line,
+      lineId: input.lineId,
     };
   }
 
@@ -285,6 +307,15 @@ export class AliyunDNSProvider implements IDNSProvider {
       params.Priority = String(priority);
     }
 
+    // 智能解析线路支持
+    const lineId = input.lineId ?? existing.lineId;
+    const line = input.line ?? existing.line;
+    if (lineId) {
+      params.Line = lineId;
+    } else if (line) {
+      params.Line = line;
+    }
+
     await this.request("UpdateDomainRecord", params);
 
     return {
@@ -294,11 +325,31 @@ export class AliyunDNSProvider implements IDNSProvider {
       content: input.content || existing.content,
       ttl: input.ttl ?? existing.ttl,
       priority,
+      line: line,
+      lineId: lineId,
     };
   }
 
   async deleteRecord(domainId: string, recordId: string): Promise<void> {
     await this.request("DeleteDomainRecord", { RecordId: recordId });
+  }
+
+  /**
+   * 获取域名可用的解析线路列表
+   */
+  async listLines(domainId: string): Promise<DNSLine[]> {
+    const domain = await this.getDomain(domainId);
+
+    const data = await this.request<AliyunRecordLineList>("DescribeSupportLines", {
+      DomainName: domain.name,
+    });
+
+    const lines = data.RecordLines?.RecordLine || [];
+    return lines.map((line) => ({
+      id: line.LineCode,
+      name: line.LineDisplayName || line.LineName,
+      parentId: line.FatherCode,
+    }));
   }
 
   private extractSubdomain(fullName: string, domainName: string): string {
@@ -321,9 +372,10 @@ export class AliyunDNSProvider implements IDNSProvider {
       content: record.Value,
       ttl: record.TTL,
       priority: record.Priority,
+      line: record.Line,
+      lineId: record.Line, // Aliyun 使用同一个值
       extra: {
         status: record.Status,
-        line: record.Line,
       },
     };
   }

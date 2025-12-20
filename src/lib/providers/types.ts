@@ -34,7 +34,17 @@ export interface ProviderRecord {
   ttl: number; // Time to live in seconds
   priority?: number; // For MX, SRV records
   proxied?: boolean; // Cloudflare specific
+  // 智能解析线路 (用于阿里云、腾讯云等)
+  line?: string; // 线路名称: 默认, 电信, 联通, 移动, 海外等
+  lineId?: string; // 线路ID (服务商特定)
   extra?: Record<string, unknown>;
+}
+
+// DNS 解析线路定义
+export interface DNSLine {
+  id: string; // 线路ID
+  name: string; // 线路名称
+  parentId?: string; // 父级线路ID (用于分组)
 }
 
 // Input for creating a record
@@ -45,6 +55,9 @@ export interface CreateRecordInput {
   ttl?: number;
   priority?: number;
   proxied?: boolean;
+  // 智能解析线路
+  line?: string; // 线路名称
+  lineId?: string; // 线路ID (优先使用)
 }
 
 // Input for updating a record
@@ -128,6 +141,12 @@ export interface IDNSProvider {
    * Delete a DNS record
    */
   deleteRecord(domainId: string, recordId: string): Promise<void>;
+
+  /**
+   * List available DNS lines for a domain (智能解析线路)
+   * Only supported by some providers (Aliyun, DNSPod)
+   */
+  listLines?(domainId: string): Promise<DNSLine[]>;
 
   /**
    * Batch create records

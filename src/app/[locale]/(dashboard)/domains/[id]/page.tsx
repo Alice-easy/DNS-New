@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDomainWithRecords, syncDomainRecords } from "@/server/domains";
+import { getProviderFeatures } from "@/server/records";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ import {
   ArrowLeft,
   Shield,
   ShieldOff,
+  MapPin,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { RecordActions } from "./record-actions";
@@ -63,6 +65,12 @@ export default async function DomainDetailPage({
     notFound();
   }
 
+  // 获取服务商特性
+  const providerFeaturesResult = await getProviderFeatures(id);
+  const supportsGeoRouting = providerFeaturesResult.success
+    ? providerFeaturesResult.features?.geoRouting ?? false
+    : false;
+
   const t = await getTranslations("Records");
   const tCommon = await getTranslations("Common");
   const tNav = await getTranslations("Navigation");
@@ -98,7 +106,7 @@ export default async function DomainDetailPage({
               {t("syncRecords")}
             </Button>
           </form>
-          <AddRecordDialog domainId={id} domainName={domain.name} />
+          <AddRecordDialog domainId={id} domainName={domain.name} supportsGeoRouting={supportsGeoRouting} />
         </div>
       </div>
 
@@ -127,6 +135,9 @@ export default async function DomainDetailPage({
                   <TableHead className="w-20">{tCommon("type")}</TableHead>
                   <TableHead>{tCommon("name")}</TableHead>
                   <TableHead>{t("recordContent")}</TableHead>
+                  {supportsGeoRouting && (
+                    <TableHead className="w-24">{t("dnsLine")}</TableHead>
+                  )}
                   <TableHead className="w-20">{tCommon("ttl")}</TableHead>
                   <TableHead className="w-20">{t("recordProxy")}</TableHead>
                   <TableHead className="w-20 text-right">{tCommon("actions")}</TableHead>
@@ -149,6 +160,18 @@ export default async function DomainDetailPage({
                     <TableCell className="font-mono text-sm max-w-xs truncate">
                       {record.content}
                     </TableCell>
+                    {supportsGeoRouting && (
+                      <TableCell>
+                        {record.line ? (
+                          <Badge variant="secondary" className="text-xs">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {record.line}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground">
                       {record.ttl === 1 ? t("auto") : `${record.ttl}s`}
                     </TableCell>

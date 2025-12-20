@@ -164,7 +164,11 @@
     "recordDeleted": "记录删除成功",
     "recordCreateFailed": "创建记录失败",
     "recordUpdateFailed": "更新记录失败",
-    "recordDeleteFailed": "删除记录失败"
+    "recordDeleteFailed": "删除记录失败",
+    "dnsLine": "解析线路",
+    "selectLine": "选择线路",
+    "dnsLineDesc": "选择解析线路实现智能分流（如电信、联通、移动等）",
+    "loading": "加载中..."
   },
   "Settings": {
     "title": "设置",

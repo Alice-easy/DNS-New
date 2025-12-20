@@ -13,6 +13,7 @@ import {
   CreateRecordInput,
   UpdateRecordInput,
   DNSRecordType,
+  DNSLine,
   AuthenticationError,
   RateLimitError,
   RecordNotFoundError,
@@ -64,6 +65,22 @@ interface DNSPodRecordList {
 
 interface DNSPodCreateRecord {
   RecordId: number;
+}
+
+// DNSPod 解析线路响应
+interface DNSPodRecordLine {
+  Name: string;
+  LineId: string;
+}
+
+interface DNSPodRecordLineList {
+  LineList: DNSPodRecordLine[];
+  LineGroupList?: Array<{
+    LineId: string;
+    Name: string;
+    Type: string;
+    LineList: string[];
+  }>;
 }
 
 export class DNSPodProvider implements IDNSProvider {
@@ -291,9 +308,15 @@ export class DNSPodProvider implements IDNSProvider {
       SubDomain: subDomain,
       RecordType: input.type,
       Value: input.content,
-      RecordLine: "默认",
       TTL: input.ttl || 600,
     };
+
+    // 智能解析线路支持
+    if (input.lineId) {
+      params.RecordLineId = input.lineId;
+    }
+    // RecordLine 是必填的，使用线路名称或默认值
+    params.RecordLine = input.line || "默认";
 
     if (input.priority !== undefined && input.type === "MX") {
       params.MX = input.priority;
@@ -308,6 +331,8 @@ export class DNSPodProvider implements IDNSProvider {
       content: input.content,
       ttl: input.ttl || 600,
       priority: input.priority,
+      line: input.line || "默认",
+      lineId: input.lineId,
     };
   }
 
@@ -335,9 +360,16 @@ export class DNSPodProvider implements IDNSProvider {
       SubDomain: subDomain,
       RecordType: input.type || existing.type,
       Value: input.content || existing.content,
-      RecordLine: "默认",
       TTL: input.ttl ?? existing.ttl,
     };
+
+    // 智能解析线路支持
+    const lineId = input.lineId ?? existing.lineId;
+    const line = input.line ?? existing.line ?? "默认";
+    if (lineId) {
+      params.RecordLineId = lineId;
+    }
+    params.RecordLine = line;
 
     const priority = input.priority ?? existing.priority;
     if (priority !== undefined && (input.type || existing.type) === "MX") {
@@ -353,6 +385,8 @@ export class DNSPodProvider implements IDNSProvider {
       content: input.content || existing.content,
       ttl: input.ttl ?? existing.ttl,
       priority,
+      line: line,
+      lineId: lineId,
     };
   }
 
@@ -363,6 +397,28 @@ export class DNSPodProvider implements IDNSProvider {
       Domain: domain.name,
       RecordId: parseInt(recordId),
     });
+  }
+
+  /**
+   * 获取域名可用的解析线路列表
+   */
+  async listLines(domainId: string): Promise<DNSLine[]> {
+    const domain = await this.getDomain(domainId);
+
+    // 获取域名等级信息
+    const domainInfo = domain.extra as { grade?: string } | undefined;
+    const grade = domainInfo?.grade || "DP_FREE";
+
+    const data = await this.request<DNSPodRecordLineList>("DescribeRecordLineList", {
+      Domain: domain.name,
+      DomainGrade: grade,
+    });
+
+    const lines = data.LineList || [];
+    return lines.map((line) => ({
+      id: line.LineId,
+      name: line.Name,
+    }));
   }
 
   private extractSubdomain(fullName: string, domainName: string): string {
@@ -398,10 +454,10 @@ export class DNSPodProvider implements IDNSProvider {
       content: record.Value,
       ttl: record.TTL,
       priority: record.MX,
+      line: record.Line,
+      lineId: record.LineId,
       extra: {
         status: record.Status,
-        line: record.Line,
-        lineId: record.LineId,
         updatedOn: record.UpdatedOn,
       },
     };

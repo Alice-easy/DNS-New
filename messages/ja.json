@@ -164,7 +164,11 @@
     "recordDeleted": "レコードを削除しました",
     "recordCreateFailed": "レコードの作成に失敗しました",
     "recordUpdateFailed": "レコードの更新に失敗しました",
-    "recordDeleteFailed": "レコードの削除に失敗しました"
+    "recordDeleteFailed": "レコードの削除に失敗しました",
+    "dnsLine": "DNS回線",
+    "selectLine": "回線を選択",
+    "dnsLineDesc": "地域ベースのルーティング用のDNS回線を選択（例：電信、聯通、移動）",
+    "loading": "読み込み中..."
   },
   "Settings": {
     "title": "設定",

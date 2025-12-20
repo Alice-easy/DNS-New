@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,9 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
-import { createRecord } from "@/server/records";
+import { createRecord, getDomainLines } from "@/server/records";
 import { toast } from "sonner";
-import type { DNSRecordType } from "@/lib/providers/types";
+import type { DNSRecordType, DNSLine } from "@/lib/providers/types";
 
 const RECORD_TYPES: DNSRecordType[] = [
   "A",
@@ -40,14 +40,36 @@ const RECORD_TYPES: DNSRecordType[] = [
 interface AddRecordDialogProps {
   domainId: string;
   domainName: string;
+  supportsGeoRouting?: boolean;
 }
 
-export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) {
+export function AddRecordDialog({ domainId, domainName, supportsGeoRouting = false }: AddRecordDialogProps) {
   const t = useTranslations("Records");
   const tCommon = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [recordType, setRecordType] = useState<DNSRecordType>("A");
+  const [lines, setLines] = useState<DNSLine[]>([]);
+  const [selectedLine, setSelectedLine] = useState<string>("");
+  const [linesLoading, setLinesLoading] = useState(false);
+
+  // 当对话框打开时加载线路列表
+  useEffect(() => {
+    if (open && supportsGeoRouting && lines.length === 0) {
+      setLinesLoading(true);
+      getDomainLines(domainId)
+        .then((result) => {
+          if (result.success && result.lines) {
+            setLines(result.lines);
+            // 默认选择第一个线路（通常是"默认"）
+            if (result.lines.length > 0) {
+              setSelectedLine(result.lines[0].id);
+            }
+          }
+        })
+        .finally(() => setLinesLoading(false));
+    }
+  }, [open, supportsGeoRouting, domainId, lines.length]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,6 +84,9 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
       : undefined;
     const proxied = formData.get("proxied") === "on";
 
+    // 获取选中的线路信息
+    const selectedLineObj = lines.find((l) => l.id === selectedLine);
+
     try {
       const result = await createRecord(domainId, {
         type: recordType,
@@ -70,6 +95,9 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
         ttl,
         priority,
         proxied,
+        // 智能解析线路
+        line: selectedLineObj?.name,
+        lineId: selectedLine || undefined,
       });
 
       if (result.success) {
@@ -214,6 +242,32 @@ export function AddRecordDialog({ domainId, domainName }: AddRecordDialogProps) 
                 </SelectContent>
               </Select>
             </div>
+
+            {/* DNS Line (智能解析线路) */}
+            {supportsGeoRouting && lines.length > 0 && (
+              <div className="grid gap-2">
+                <Label>{t("dnsLine")}</Label>
+                <Select
+                  value={selectedLine}
+                  onValueChange={setSelectedLine}
+                  disabled={linesLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={linesLoading ? t("loading") : t("selectLine")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lines.map((line) => (
+                      <SelectItem key={line.id} value={line.id}>
+                        {line.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {t("dnsLineDesc")}
+                </p>
+              </div>
+            )}
 
             {/* Proxied (Cloudflare specific) */}
             {(recordType === "A" ||
