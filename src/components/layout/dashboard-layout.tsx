@@ -15,6 +15,7 @@ import {
   Shield,
   History,
   GitCompare,
+  Radar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface NavItem {
-  titleKey: "dashboard" | "providers" | "domains" | "records" | "changes" | "logs" | "settings" | "admin";
+  titleKey: "dashboard" | "providers" | "domains" | "records" | "monitoring" | "changes" | "logs" | "settings" | "admin";
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly?: boolean;
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { titleKey: "providers", href: "/providers", icon: Server },
   { titleKey: "domains", href: "/domains", icon: Globe },
   { titleKey: "records", href: "/records", icon: FileText },
+  { titleKey: "monitoring", href: "/monitoring", icon: Radar },
   { titleKey: "changes", href: "/changes", icon: GitCompare },
   { titleKey: "logs", href: "/logs", icon: History },
   { titleKey: "settings", href: "/settings", icon: Settings },

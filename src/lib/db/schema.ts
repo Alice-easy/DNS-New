@@ -171,6 +171,55 @@ export const recordChanges = sqliteTable("record_changes", {
   ),
 });
 
+// Monitor Tasks (监控任务)
+export const monitorTasks = sqliteTable("monitor_tasks", {
+  id: text("id").primaryKey(),
+  domainId: text("domain_id")
+    .notNull()
+    .references(() => domains.id, { onDelete: "cascade" }),
+  recordId: text("record_id")
+    .notNull()
+    .references(() => records.id, { onDelete: "cascade" }),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  checkInterval: integer("check_interval").notNull().default(300), // 检查间隔(秒)
+  checkAvailability: integer("check_availability", { mode: "boolean" }).notNull().default(true),
+  checkLatency: integer("check_latency", { mode: "boolean" }).notNull().default(true),
+  checkCorrectness: integer("check_correctness", { mode: "boolean" }).notNull().default(true),
+  lastCheckAt: integer("last_check_at", { mode: "timestamp" }),
+  nextCheckAt: integer("next_check_at", { mode: "timestamp" }),
+  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+});
+
+// Monitor Results (监控结果)
+export const monitorResults = sqliteTable("monitor_results", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id")
+    .notNull()
+    .references(() => monitorTasks.id, { onDelete: "cascade" }),
+  domainId: text("domain_id")
+    .notNull()
+    .references(() => domains.id, { onDelete: "cascade" }),
+  recordId: text("record_id")
+    .notNull()
+    .references(() => records.id, { onDelete: "cascade" }),
+  status: text("status").notNull(), // success, failed, partial
+  isAvailable: integer("is_available", { mode: "boolean" }),
+  latency: integer("latency"), // 响应时间(ms)
+  isCorrect: integer("is_correct", { mode: "boolean" }),
+  expectedValue: text("expected_value"),
+  actualValue: text("actual_value"),
+  errorMessage: text("error_message"),
+  checkedAt: integer("checked_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
@@ -210,6 +259,7 @@ export const domainsRelations = relations(domains, ({ one, many }) => ({
   records: many(records),
   shares: many(domainShares),
   recordChanges: many(recordChanges),
+  monitorTasks: many(monitorTasks),
 }));
 
 export const domainSharesRelations = relations(domainShares, ({ one }) => ({
@@ -223,11 +273,12 @@ export const domainSharesRelations = relations(domainShares, ({ one }) => ({
   }),
 }));
 
-export const recordsRelations = relations(records, ({ one }) => ({
+export const recordsRelations = relations(records, ({ one, many }) => ({
   domain: one(domains, {
     fields: [records.domainId],
     references: [domains.id],
   }),
+  monitorTasks: many(monitorTasks),
 }));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
@@ -248,6 +299,37 @@ export const recordChangesRelations = relations(recordChanges, ({ one }) => ({
   }),
 }));
 
+export const monitorTasksRelations = relations(monitorTasks, ({ one, many }) => ({
+  domain: one(domains, {
+    fields: [monitorTasks.domainId],
+    references: [domains.id],
+  }),
+  record: one(records, {
+    fields: [monitorTasks.recordId],
+    references: [records.id],
+  }),
+  createdByUser: one(users, {
+    fields: [monitorTasks.createdBy],
+    references: [users.id],
+  }),
+  results: many(monitorResults),
+}));
+
+export const monitorResultsRelations = relations(monitorResults, ({ one }) => ({
+  task: one(monitorTasks, {
+    fields: [monitorResults.taskId],
+    references: [monitorTasks.id],
+  }),
+  domain: one(domains, {
+    fields: [monitorResults.domainId],
+    references: [domains.id],
+  }),
+  record: one(records, {
+    fields: [monitorResults.recordId],
+    references: [records.id],
+  }),
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -263,3 +345,7 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
 export type RecordChange = typeof recordChanges.$inferSelect;
 export type NewRecordChange = typeof recordChanges.$inferInsert;
+export type MonitorTask = typeof monitorTasks.$inferSelect;
+export type NewMonitorTask = typeof monitorTasks.$inferInsert;
+export type MonitorResult = typeof monitorResults.$inferSelect;
+export type NewMonitorResult = typeof monitorResults.$inferInsert;
