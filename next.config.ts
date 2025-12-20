@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "dns.unix.us.ci",
     "http://dns.unix.us.ci",
     "https://dns.unix.us.ci",
+    "23.140.140.69",
   ],
 };
 
