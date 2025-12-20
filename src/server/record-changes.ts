@@ -59,12 +59,13 @@ export async function getRecordChanges(options?: GetRecordChangesOptions) {
   }
 
   if (options?.search) {
-    conditions.push(
-      or(
-        like(recordChanges.recordName, `%${options.search}%`),
-        like(recordChanges.recordType, `%${options.search}%`)
-      )
+    const searchCondition = or(
+      like(recordChanges.recordName, `%${options.search}%`),
+      like(recordChanges.recordType, `%${options.search}%`)
     );
+    if (searchCondition) {
+      conditions.push(searchCondition);
+    }
   }
 
   const whereClause = and(...conditions);
