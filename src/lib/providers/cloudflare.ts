@@ -192,6 +192,11 @@ export class CloudflareProvider implements IDNSProvider {
     domainId: string,
     input: CreateRecordInput
   ): Promise<ProviderRecord> {
+    const proxied = input.proxied ?? false;
+    // TTL=1 表示自动，仅在 proxied=true 时有效
+    // 当 proxied=false 且 ttl=1 时，使用默认值 300（5分钟）
+    const ttl = input.ttl === 1 && !proxied ? 300 : (input.ttl || 1);
+
     const record = await this.request<CloudflareDNSRecord>(
       `/zones/${domainId}/dns_records`,
       {
@@ -200,9 +205,9 @@ export class CloudflareProvider implements IDNSProvider {
           type: input.type,
           name: input.name,
           content: input.content,
-          ttl: input.ttl || 1, // 1 = automatic
+          ttl,
           priority: input.priority,
-          proxied: input.proxied ?? false,
+          proxied,
         }),
       }
     );
@@ -231,6 +236,12 @@ export class CloudflareProvider implements IDNSProvider {
       throw error;
     }
 
+    const proxied = input.proxied ?? existingRecord.proxied ?? false;
+    const rawTtl = input.ttl ?? existingRecord.ttl;
+    // TTL=1 表示自动，仅在 proxied=true 时有效
+    // 当 proxied=false 且 ttl=1 时，使用默认值 300（5分钟）
+    const ttl = rawTtl === 1 && !proxied ? 300 : rawTtl;
+
     // Update with new values
     const record = await this.request<CloudflareDNSRecord>(
       `/zones/${domainId}/dns_records/${recordId}`,
@@ -240,9 +251,9 @@ export class CloudflareProvider implements IDNSProvider {
           type: input.type || existingRecord.type,
           name: input.name || existingRecord.name,
           content: input.content || existingRecord.content,
-          ttl: input.ttl ?? existingRecord.ttl,
+          ttl,
           priority: input.priority ?? existingRecord.priority,
-          proxied: input.proxied ?? existingRecord.proxied,
+          proxied,
         }),
       }
     );
