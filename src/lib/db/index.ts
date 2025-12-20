@@ -5,14 +5,21 @@ import * as fs from "fs";
 import * as path from "path";
 import { validateEnv } from "../env";
 
-// Validate environment variables at startup
-try {
-  validateEnv();
-} catch (error) {
-  console.error(error instanceof Error ? error.message : error);
-  // In development, continue with warnings; in production, exit
-  if (process.env.NODE_ENV === "production") {
-    process.exit(1);
+// Check if we're in Next.js build phase
+const isBuildPhase =
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  process.argv.some((arg) => arg.includes("next") && arg.includes("build"));
+
+// Validate environment variables at startup (skip during build)
+if (!isBuildPhase) {
+  try {
+    validateEnv();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    // In production runtime, exit; in development, continue with warnings
+    if (process.env.NODE_ENV === "production") {
+      process.exit(1);
+    }
   }
 }
 

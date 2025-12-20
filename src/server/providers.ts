@@ -113,6 +113,16 @@ export async function deleteProvider(providerId: string) {
   return { success: true };
 }
 
+// Form action wrapper for syncProvider (returns void for form compatibility)
+export async function syncProviderAction(providerId: string): Promise<void> {
+  await syncProvider(providerId);
+}
+
+// Form action wrapper for deleteProvider (returns void for form compatibility)
+export async function deleteProviderAction(providerId: string): Promise<void> {
+  await deleteProvider(providerId);
+}
+
 export async function syncProvider(providerId: string) {
   const session = await auth();
   if (!session?.user?.id) {

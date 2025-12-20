@@ -22,7 +22,7 @@ import {
 import { Globe, RefreshCw, ExternalLink, Server } from "lucide-react";
 import Link from "next/link";
 import { getDomains } from "@/server/domains";
-import { syncProvider } from "@/server/providers";
+import { syncProviderAction } from "@/server/providers";
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -117,7 +117,7 @@ export default async function DomainsPage() {
                     {group.providerName} • {group.domains.length} domains
                   </CardDescription>
                 </div>
-                <form action={syncProvider.bind(null, group.providerId)}>
+                <form action={syncProviderAction.bind(null, group.providerId)}>
                   <Button type="submit" variant="outline" size="sm">
                     <RefreshCw className="mr-1 h-3 w-3" />
                     Sync All
