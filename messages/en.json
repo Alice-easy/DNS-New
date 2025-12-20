@@ -448,6 +448,7 @@
     "rulesConfigured": "rules configured",
     "channels": "Channels",
     "channelsConfigured": "channels configured",
+    "notificationChannels": "Notification Channels",
     "activeAlerts": "Active Alerts",
     "criticalAlerts": "Critical Alerts",
     "last7Days": "Last 7 days",

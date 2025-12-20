@@ -446,6 +446,7 @@
     "rulesConfigured": "条规则已配置",
     "channels": "通知渠道",
     "channelsConfigured": "个渠道已配置",
+    "notificationChannels": "通知渠道",
     "activeAlerts": "活跃告警",
     "criticalAlerts": "严重告警",
     "last7Days": "最近 7 天",
