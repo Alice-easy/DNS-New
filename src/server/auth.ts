@@ -120,12 +120,17 @@ export async function handleRegister(formData: FormData): Promise<RegisterResult
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Check if this is the first user (will be admin)
+    const userCount = await db.select({ id: users.id }).from(users).limit(1);
+    const isFirstUser = userCount.length === 0;
+
+    // Create user (first user becomes admin)
     await db.insert(users).values({
       email,
       username: username || null,
       password: hashedPassword,
       name: username || email.split("@")[0],
+      role: isFirstUser ? "admin" : "user",
     });
 
     return { success: true };
