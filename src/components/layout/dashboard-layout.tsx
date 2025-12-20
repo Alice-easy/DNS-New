@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Globe,
   Server,
@@ -24,20 +25,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface NavItem {
-  title: string;
+  titleKey: "dashboard" | "providers" | "domains" | "records" | "settings";
   href: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const navItems: NavItem[] = [
-  { title: "Dashboard", href: "/", icon: Activity },
-  { title: "Providers", href: "/providers", icon: Server },
-  { title: "Domains", href: "/domains", icon: Globe },
-  { title: "Records", href: "/records", icon: FileText },
-  { title: "Settings", href: "/settings", icon: Settings },
+  { titleKey: "dashboard", href: "/", icon: Activity },
+  { titleKey: "providers", href: "/providers", icon: Server },
+  { titleKey: "domains", href: "/domains", icon: Globe },
+  { titleKey: "records", href: "/records", icon: FileText },
+  { titleKey: "settings", href: "/settings", icon: Settings },
 ];
 
 interface DashboardLayoutProps {
@@ -52,6 +53,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const t = useTranslations("Navigation");
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = pathname === item.href;
@@ -67,7 +69,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         onClick={() => setSidebarOpen(false)}
       >
         <item.icon className="h-4 w-4" />
-        {item.title}
+        {t(item.titleKey)}
       </Link>
     );
   };
@@ -116,7 +118,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               <DropdownMenuItem asChild>
                 <Link href="/settings">
                   <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  {t("settings")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -124,7 +126,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <form action="/api/auth/signout" method="POST" className="w-full">
                   <button type="submit" className="flex w-full items-center">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    {t("signOut")}
                   </button>
                 </form>
               </DropdownMenuItem>
@@ -151,20 +153,28 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col">
-        {/* Top Bar (Mobile) */}
-        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:hidden">
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-          </Sheet>
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Globe className="h-5 w-5" />
-            <span>DNS Manager</span>
-          </Link>
+        {/* Top Bar */}
+        <header className="flex h-14 items-center justify-between gap-4 border-b bg-card px-4">
+          <div className="flex items-center gap-4">
+            {/* Mobile menu button */}
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+            </Sheet>
+            <Link href="/" className="flex items-center gap-2 font-semibold lg:hidden">
+              <Globe className="h-5 w-5" />
+              <span>DNS Manager</span>
+            </Link>
+          </div>
+
+          {/* Language Switcher - always visible */}
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+          </div>
         </header>
 
         {/* Page Content */}

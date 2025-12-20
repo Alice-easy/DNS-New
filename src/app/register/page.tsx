@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { handleRegister } from "@/server/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +17,10 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Loader2, UserPlus } from "lucide-react";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function RegisterPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -62,11 +65,16 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
       <Card className="w-full max-w-md mx-4">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("registerTitle")}</CardTitle>
           <CardDescription>
-            Register to start managing your DNS records
+            {t("registerSubtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -79,13 +87,13 @@ export default function RegisterPage() {
             <form action={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  Email <span className="text-red-500">*</span>
+                  {t("email")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t("emailPlaceholder")}
                   required
                   disabled={isLoading}
                 />
@@ -93,46 +101,43 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="username">
-                  Username <span className="text-muted-foreground text-xs">(optional)</span>
+                  {t("username")} <span className="text-muted-foreground text-xs">({t("usernameHelp")})</span>
                 </Label>
                 <Input
                   id="username"
                   name="username"
                   type="text"
-                  placeholder="Choose a username"
+                  placeholder={t("usernamePlaceholder")}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Letters, numbers, underscores, and hyphens only. Min 3 characters.
-                </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">
-                  Password <span className="text-red-500">*</span>
+                  {t("password")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="Create a password"
+                  placeholder={t("passwordPlaceholder")}
                   required
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  8+ characters with uppercase, lowercase, and number
+                  {t("passwordRequirements")}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">
-                  Confirm Password <span className="text-red-500">*</span>
+                  {t("confirmPassword")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  placeholder="Confirm your password"
+                  placeholder={t("confirmPasswordPlaceholder")}
                   required
                   disabled={isLoading}
                 />
@@ -148,12 +153,12 @@ export default function RegisterPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
+                    {t("signingUp")}
                   </>
                 ) : (
                   <>
                     <UserPlus className="mr-2 h-4 w-4" />
-                    Create Account
+                    {t("register")}
                   </>
                 )}
               </Button>
@@ -162,9 +167,9 @@ export default function RegisterPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t("hasAccount")}{" "}
             <Link href="/login" className="text-primary hover:underline font-medium">
-              Sign in
+              {t("login")}
             </Link>
           </p>
         </CardFooter>

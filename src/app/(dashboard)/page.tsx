@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { providers, domains, records } from "@/lib/db/schema";
 import { count, eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -64,6 +65,9 @@ export default async function DashboardPage() {
     return null;
   }
 
+  const t = await getTranslations("Dashboard");
+  const tNav = await getTranslations("Navigation");
+  const tCommon = await getTranslations("Common");
   const stats = await getStats(userId);
   const recentDomains = await getRecentDomains(userId);
 
@@ -71,9 +75,9 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Welcome back, {session?.user?.name || "User"}
+          {t("welcome")}, {session?.user?.name || "User"}
         </p>
       </div>
 
@@ -81,36 +85,36 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Providers</CardTitle>
+            <CardTitle className="text-sm font-medium">{tNav("providers")}</CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.providers}</div>
             <p className="text-xs text-muted-foreground">
-              Connected DNS providers
+              {t("totalProviders")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Domains</CardTitle>
+            <CardTitle className="text-sm font-medium">{tNav("domains")}</CardTitle>
             <Globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.domains}</div>
-            <p className="text-xs text-muted-foreground">Managed domains</p>
+            <p className="text-xs text-muted-foreground">{t("totalDomains")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Records</CardTitle>
+            <CardTitle className="text-sm font-medium">{tNav("records")}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.records}</div>
-            <p className="text-xs text-muted-foreground">Total DNS records</p>
+            <p className="text-xs text-muted-foreground">{t("totalRecords")}</p>
           </CardContent>
         </Card>
       </div>
@@ -120,15 +124,15 @@ export default async function DashboardPage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started with common tasks</CardDescription>
+            <CardTitle>{t("quickActions")}</CardTitle>
+            <CardDescription>{t("subtitle")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {stats.providers === 0 ? (
               <Button asChild className="w-full justify-start">
                 <Link href="/providers/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add your first DNS provider
+                  {t("addProvider")}
                 </Link>
               </Button>
             ) : (
@@ -136,13 +140,13 @@ export default async function DashboardPage() {
                 <Button asChild variant="outline" className="w-full justify-start">
                   <Link href="/providers/new">
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Provider
+                    {t("addProvider")}
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-start">
                   <Link href="/domains">
                     <Globe className="mr-2 h-4 w-4" />
-                    Manage Domains
+                    {tNav("domains")}
                   </Link>
                 </Button>
               </>
@@ -154,13 +158,13 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recent Domains</CardTitle>
-              <CardDescription>Your recently added domains</CardDescription>
+              <CardTitle>{t("recentActivity")}</CardTitle>
+              <CardDescription>{t("subtitle")}</CardDescription>
             </div>
             {recentDomains.length > 0 && (
               <Button asChild variant="ghost" size="sm">
                 <Link href="/domains">
-                  View all
+                  {tCommon("view")}
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
@@ -169,7 +173,7 @@ export default async function DashboardPage() {
           <CardContent>
             {recentDomains.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No domains yet. Add a provider to sync your domains.
+                {t("noProvidersDesc")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -191,7 +195,7 @@ export default async function DashboardPage() {
                           : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
-                      {domain.status}
+                      {domain.status === "active" ? tCommon("active") : tCommon("pending")}
                     </span>
                   </div>
                 ))}
