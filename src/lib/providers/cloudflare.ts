@@ -132,8 +132,9 @@ export class CloudflareProvider implements IDNSProvider {
 
   async validateCredentials(): Promise<boolean> {
     try {
-      // Try to verify token by checking user info
-      await this.request<{ id: string }>("/user/tokens/verify");
+      // 使用 /zones 端点验证，兼容 User Token 和 Account Token
+      // 只要 Token 有 Zone:Read 权限就能通过验证
+      await this.request<CloudflareZone[]>("/zones?per_page=1");
       return true;
     } catch (error) {
       if (error instanceof AuthenticationError) {
