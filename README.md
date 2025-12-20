@@ -21,6 +21,7 @@ A unified DNS management system that supports multiple DNS providers (Cloudflare
 
 ## Features
 
+### Core Features
 - **Multi-Provider Support**: Manage DNS records across multiple providers from a single dashboard
 - **Secure Authentication**: GitHub OAuth + Credentials authentication with NextAuth.js
 - **Unified Dashboard**: Overview of all providers, domains, and records
@@ -28,6 +29,29 @@ A unified DNS management system that supports multiple DNS providers (Cloudflare
 - **Modern UI**: Built with shadcn/ui components and Tailwind CSS
 - **Responsive Design**: Works on desktop and mobile devices
 - **Internationalization**: Full support for English, Chinese, and Japanese
+
+### DNS Management
+- **Record Management**: Full CRUD operations for DNS records (A, AAAA, CNAME, MX, TXT, NS, etc.)
+- **Batch Operations**: Import/Export records in JSON or CSV format
+- **Change Detection**: Track and review DNS record changes during sync
+- **Operation Logs**: Complete audit trail of all DNS operations
+
+### Multi-User & Permissions
+- **User Management**: Admin panel for managing users and roles
+- **Domain Sharing**: Share domains with other users with granular permissions
+- **Permission Levels**: Owner, Full Control, Edit, Read-Only access levels
+
+### Monitoring & Alerts
+- **DNS Monitoring**: Monitor DNS record availability, latency, and correctness
+- **Alert Rules**: Configure alerts for monitoring failures, latency thresholds, and record changes
+- **Notification Channels**: Support for Webhook, Discord, and Telegram notifications
+- **Alert History**: Track all triggered alerts and their resolution status
+
+### Smart DNS (Geo Routing)
+- **Geographic Routing**: Route DNS queries based on visitor's geographic location
+- **Region/Country Targeting**: Configure targets for specific regions or countries
+- **Load Balancing**: Round-robin, weighted, and failover strategies
+- **Health Checks**: Automatic health monitoring for routing targets
 
 ### Security Features
 
@@ -162,6 +186,16 @@ dns-manager/
 │   ├── app/                    # Next.js App Router
 │   │   ├── [locale]/           # Locale-based routing
 │   │   │   ├── (dashboard)/    # Dashboard pages
+│   │   │   │   ├── admin/      # Admin panel
+│   │   │   │   ├── alerts/     # Alert management
+│   │   │   │   ├── changes/    # Change detection
+│   │   │   │   ├── domains/    # Domain management
+│   │   │   │   ├── geo-dns/    # Smart DNS (geo routing)
+│   │   │   │   ├── logs/       # Operation logs
+│   │   │   │   ├── monitoring/ # DNS monitoring
+│   │   │   │   ├── providers/  # Provider management
+│   │   │   │   ├── records/    # Record management
+│   │   │   │   └── settings/   # User settings
 │   │   │   ├── login/          # Login page
 │   │   │   └── register/       # Registration page
 │   │   └── api/auth/           # NextAuth API routes
@@ -180,8 +214,17 @@ dns-manager/
 │   │   ├── crypto.ts           # AES-256-GCM encryption
 │   │   ├── rate-limit.ts       # Rate limiting
 │   │   ├── dns-validation.ts   # DNS record validation
+│   │   ├── permissions.ts      # Permission utilities
+│   │   ├── geo-constants.ts    # Geo routing constants
 │   │   └── env.ts              # Environment validation
 │   └── server/                 # Server actions
+│       ├── providers.ts        # Provider operations
+│       ├── domains.ts          # Domain operations
+│       ├── records.ts          # Record operations
+│       ├── monitoring.ts       # DNS monitoring
+│       ├── alerts.ts           # Alert notifications
+│       ├── geo-routing.ts      # Geo routing
+│       └── users.ts            # User management
 ├── messages/                   # Translation files
 │   ├── en.json                 # English
 │   ├── zh-CN.json              # Simplified Chinese
@@ -244,12 +287,21 @@ npm run db:generate  # Generate migrations
 - [x] Operation logs UI
 - [x] Multi-user management with permissions
 
-### Phase 3
+### Phase 3 ✅
 
-- [ ] DNS monitoring
-- [ ] Change detection
-- [ ] Alert notifications
-- [ ] Smart DNS (geo-routing)
+- [x] DNS monitoring (availability, latency, correctness checks)
+- [x] Change detection (track DNS record changes during sync)
+- [x] Alert notifications (Webhook, Discord, Telegram)
+- [x] Smart DNS (geo-routing with region/country targeting)
+
+### Phase 4 (Planned)
+
+- [ ] AWS Route53 provider adapter
+- [ ] GoDaddy provider adapter
+- [ ] DNS DNSSEC management
+- [ ] API access tokens for automation
+- [ ] Scheduled DNS record updates
+- [ ] DNS template management
 
 ## Contributing
 
