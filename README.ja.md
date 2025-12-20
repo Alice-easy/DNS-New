@@ -22,11 +22,19 @@
 ## 機能
 
 - **マルチプロバイダー対応**：単一のダッシュボードで複数の DNS プロバイダーのレコードを管理
-- **安全な認証**：NextAuth.js による GitHub OAuth 認証
+- **安全な認証**：NextAuth.js による GitHub OAuth + 資格情報認証
 - **統合ダッシュボード**：全プロバイダー、ドメイン、レコードの一覧表示
 - **リアルタイム同期**：プロバイダーからドメインとレコードを同期
 - **モダン UI**：shadcn/ui コンポーネントと Tailwind CSS で構築
 - **レスポンシブデザイン**：デスクトップとモバイルデバイスに対応
+
+### セキュリティ機能
+
+- **AES-256-GCM 暗号化**：プロバイダー資格情報をデータベースで暗号化保存
+- **レート制限**：ログイン/登録へのブルートフォース攻撃を防止
+- **入力検証**：DNS レコードをプロバイダーに送信前に検証
+- **強力なパスワードポリシー**：8文字以上、大文字・小文字・数字を含む
+- **セキュアログ**：本番環境ではエラー詳細を隠蔽
 
 ## 技術スタック
 
@@ -85,10 +93,16 @@ cp .env.example .env.local
 AUTH_SECRET="あなたのシークレットキー"
 AUTH_URL="http://localhost:3000"
 
-# GitHub OAuth
+# 資格情報暗号化キー (AES-256-GCM)
+# 以下のコマンドで生成: openssl rand -base64 32
+CREDENTIALS_ENCRYPTION_KEY="あなたの暗号化キー"
+
+# GitHub OAuth（オプション - OAuth ログイン用）
 GITHUB_CLIENT_ID="あなたの GitHub Client ID"
 GITHUB_CLIENT_SECRET="あなたの GitHub Client Secret"
 ```
+
+> **重要**：`openssl rand -base64 32` を使用して安全な暗号化キーを生成してください。このキーはデータベース内の DNS プロバイダー資格情報を暗号化するために使用されます。
 
 4. データベースを初期化：
 
@@ -140,14 +154,19 @@ dns-manager/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (dashboard)/        # ダッシュボードページ
 │   │   ├── api/auth/           # NextAuth API ルート
-│   │   └── login/              # ログインページ
+│   │   ├── login/              # ログインページ
+│   │   └── register/           # 登録ページ
 │   ├── components/
 │   │   ├── ui/                 # shadcn/ui コンポーネント
 │   │   └── layout/             # レイアウトコンポーネント
 │   ├── lib/
 │   │   ├── db/                 # データベース（Drizzle）
 │   │   ├── providers/          # DNS プロバイダーアダプター
-│   │   └── auth.ts             # NextAuth 設定
+│   │   ├── auth.ts             # NextAuth 設定
+│   │   ├── crypto.ts           # AES-256-GCM 暗号化
+│   │   ├── rate-limit.ts       # レート制限
+│   │   ├── dns-validation.ts   # DNS レコード検証
+│   │   └── env.ts              # 環境変数検証
 │   └── server/                 # Server Actions
 ├── data/                       # SQLite データベース
 └── drizzle.config.ts           # Drizzle 設定

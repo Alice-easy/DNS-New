@@ -22,11 +22,19 @@
 ## 功能特点
 
 - **多服务商支持**：在单一仪表盘中管理多个 DNS 服务商的记录
-- **安全认证**：支持 GitHub OAuth 认证（NextAuth.js）
+- **安全认证**：支持 GitHub OAuth + 凭证认证（NextAuth.js）
 - **统一仪表盘**：概览所有服务商、域名和记录
 - **实时同步**：从服务商同步域名和记录
 - **现代化 UI**：使用 shadcn/ui 组件和 Tailwind CSS 构建
 - **响应式设计**：支持桌面和移动设备
+
+### 安全特性
+
+- **AES-256-GCM 加密**：服务商凭证在数据库中加密存储
+- **速率限制**：防止登录/注册的暴力破解攻击
+- **输入验证**：DNS 记录在发送到服务商前进行验证
+- **强密码策略**：要求 8 位以上，包含大小写字母和数字
+- **安全日志**：生产环境隐藏错误详情
 
 ## 技术栈
 
@@ -85,10 +93,16 @@ cp .env.example .env.local
 AUTH_SECRET="你的密钥"
 AUTH_URL="http://localhost:3000"
 
-# GitHub OAuth
+# 凭证加密密钥 (AES-256-GCM)
+# 使用以下命令生成: openssl rand -base64 32
+CREDENTIALS_ENCRYPTION_KEY="你的加密密钥"
+
+# GitHub OAuth（可选 - 用于 OAuth 登录）
 GITHUB_CLIENT_ID="你的 GitHub Client ID"
 GITHUB_CLIENT_SECRET="你的 GitHub Client Secret"
 ```
+
+> **重要**：请使用 `openssl rand -base64 32` 生成安全的加密密钥。此密钥用于加密数据库中的 DNS 服务商凭证。
 
 4. 初始化数据库：
 
@@ -140,14 +154,19 @@ dns-manager/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (dashboard)/        # 仪表盘页面
 │   │   ├── api/auth/           # NextAuth API 路由
-│   │   └── login/              # 登录页面
+│   │   ├── login/              # 登录页面
+│   │   └── register/           # 注册页面
 │   ├── components/
 │   │   ├── ui/                 # shadcn/ui 组件
 │   │   └── layout/             # 布局组件
 │   ├── lib/
 │   │   ├── db/                 # 数据库（Drizzle）
 │   │   ├── providers/          # DNS 服务商适配器
-│   │   └── auth.ts             # NextAuth 配置
+│   │   ├── auth.ts             # NextAuth 配置
+│   │   ├── crypto.ts           # AES-256-GCM 加密
+│   │   ├── rate-limit.ts       # 速率限制
+│   │   ├── dns-validation.ts   # DNS 记录验证
+│   │   └── env.ts              # 环境变量验证
 │   └── server/                 # Server Actions
 ├── data/                       # SQLite 数据库
 └── drizzle.config.ts           # Drizzle 配置
