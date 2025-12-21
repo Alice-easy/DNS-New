@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/permissions";
 import { getUsers, getAllDomains } from "@/server/admin";
-import { getAllConfigs, getDatabaseInfo } from "@/server/system-config";
+import { getAllConfigs } from "@/server/system-config";
 import { getTranslations } from "next-intl/server";
 import { AdminTabs } from "./admin-tabs";
 
@@ -19,11 +19,10 @@ export default async function AdminPage() {
   }
 
   const t = await getTranslations("Admin");
-  const [users, domains, configs, databaseInfo] = await Promise.all([
+  const [users, domains, configs] = await Promise.all([
     getUsers(),
     getAllDomains(),
     getAllConfigs(),
-    getDatabaseInfo(),
   ]);
 
   return (
@@ -33,12 +32,7 @@ export default async function AdminPage() {
         <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      <AdminTabs
-        users={users}
-        domains={domains}
-        configs={configs}
-        databaseInfo={databaseInfo}
-      />
+      <AdminTabs users={users} domains={domains} configs={configs} />
     </div>
   );
 }

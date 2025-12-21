@@ -36,7 +36,6 @@ import {
   Settings,
   Mail,
   Calendar,
-  Server,
 } from "lucide-react";
 import { toast } from "sonner";
 import { updateUserRole, deleteUser } from "@/server/admin";
@@ -73,25 +72,13 @@ interface ConfigItem {
   updatedAt: Date | null;
 }
 
-interface DatabaseInfo {
-  type: string;
-  isEdgeCompatible: boolean;
-  configured: boolean;
-}
-
 interface AdminTabsProps {
   users: User[];
   domains: Domain[];
   configs: ConfigItem[];
-  databaseInfo: DatabaseInfo;
 }
 
-export function AdminTabs({
-  users,
-  domains,
-  configs,
-  databaseInfo,
-}: AdminTabsProps) {
+export function AdminTabs({ users, domains, configs }: AdminTabsProps) {
   const t = useTranslations("Admin");
   const tCommon = useTranslations("Common");
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
@@ -216,7 +203,7 @@ export function AdminTabs({
 
             {/* Provider */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Server className="h-3.5 w-3.5 shrink-0" />
+              <Globe className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{domain.providerLabel}</span>
             </div>
 
@@ -468,7 +455,7 @@ export function AdminTabs({
 
         {/* System Settings Tab */}
         <TabsContent value="settings">
-          <SystemSettings initialConfigs={configs} databaseInfo={databaseInfo} />
+          <SystemSettings initialConfigs={configs} />
         </TabsContent>
       </Tabs>
 

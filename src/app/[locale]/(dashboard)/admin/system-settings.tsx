@@ -13,21 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
-  Database,
   Github,
-  Key,
-  Globe,
   Eye,
   EyeOff,
   Save,
   Loader2,
   CheckCircle,
-  AlertCircle,
   Info,
-  Server,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getAllConfigs, setConfig } from "@/server/system-config";
@@ -44,26 +37,9 @@ interface ConfigItem {
 
 interface SystemSettingsProps {
   initialConfigs: ConfigItem[];
-  databaseInfo: {
-    type: string;
-    isEdgeCompatible: boolean;
-    configured: boolean;
-  };
 }
 
-type ConfigCategory = "database" | "oauth" | "security" | "other";
-
-const categoryIcons: Record<ConfigCategory, React.ReactNode> = {
-  database: <Database className="h-5 w-5" />,
-  oauth: <Github className="h-5 w-5" />,
-  security: <Key className="h-5 w-5" />,
-  other: <Globe className="h-5 w-5" />,
-};
-
-export function SystemSettings({
-  initialConfigs,
-  databaseInfo,
-}: SystemSettingsProps) {
+export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
   const t = useTranslations("SystemSettings");
   const [isPending, startTransition] = useTransition();
   const [configs, setConfigs] = useState<ConfigItem[]>(initialConfigs);
@@ -110,27 +86,6 @@ export function SystemSettings({
   const togglePasswordVisibility = (key: string) => {
     setShowPasswords((prev) => ({ ...prev, [key]: !prev[key] }));
   };
-
-  // Group configs by category
-  const configsByCategory = Object.entries(CONFIG_METADATA).reduce(
-    (acc, [key, meta]) => {
-      if (!acc[meta.category]) {
-        acc[meta.category] = [];
-      }
-      acc[meta.category].push({ key, ...meta });
-      return acc;
-    },
-    {} as Record<
-      ConfigCategory,
-      Array<{
-        key: string;
-        label: string;
-        description: string;
-        type: string;
-        placeholder?: string;
-      }>
-    >
-  );
 
   const renderConfigField = (
     key: string,
@@ -221,155 +176,39 @@ export function SystemSettings({
     );
   };
 
+  // Get OAuth configs
+  const oauthConfigs = Object.entries(CONFIG_METADATA).map(([key, meta]) => ({
+    key,
+    ...meta,
+  }));
+
   return (
     <div className="space-y-6">
-      {/* Database Status Card - Compact on mobile */}
-      <Card className="border-2 border-primary/20">
+      {/* OAuth Configuration */}
+      <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Server className="h-5 w-5 text-primary" />
-            {t("databaseStatus")}
+            <Github className="h-5 w-5" />
+            {t("oauthConfig")}
           </CardTitle>
           <CardDescription className="text-sm">
-            {t("databaseStatusDesc")}
+            {t("oauthConfigDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Status badges - stack on mobile */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-              <Database className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm font-medium">{t("databaseType")}:</span>
-              <Badge variant="outline" className="uppercase font-mono">
-                {databaseInfo.type}
-              </Badge>
-            </div>
-
-            <Separator
-              orientation="vertical"
-              className="h-8 hidden sm:block"
-            />
-            <Separator className="sm:hidden" />
-
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-              <Zap className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm font-medium">
-                {t("edgeCompatible")}:
-              </span>
-              {databaseInfo.isEdgeCompatible ? (
-                <Badge className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  {t("yes")}
-                </Badge>
-              ) : (
-                <Badge variant="secondary">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  {t("no")}
-                </Badge>
-              )}
-            </div>
-          </div>
-
           {/* Info note */}
           <div className="flex items-start gap-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 p-4 border border-blue-200 dark:border-blue-900">
             <Info className="h-5 w-5 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
             <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
-              {t("databaseNote")}
+              {t("oauthNote")}
             </p>
+          </div>
+
+          <div className="grid gap-4">
+            {oauthConfigs.map((item) => renderConfigField(item.key, item))}
           </div>
         </CardContent>
       </Card>
-
-      {/* Configuration Cards - Grid layout for larger screens */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Database Configuration */}
-        {configsByCategory.database && (
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                {categoryIcons.database}
-                {t("databaseConfig")}
-              </CardTitle>
-              <CardDescription className="text-sm">
-                {t("databaseConfigDesc")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {configsByCategory.database.map((item) =>
-                  renderConfigField(item.key, item)
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* OAuth Configuration */}
-        {configsByCategory.oauth && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                {categoryIcons.oauth}
-                {t("oauthConfig")}
-              </CardTitle>
-              <CardDescription className="text-sm">
-                {t("oauthConfigDesc")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {configsByCategory.oauth.map((item) =>
-                  renderConfigField(item.key, item)
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Security Configuration */}
-        {configsByCategory.security && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                {categoryIcons.security}
-                {t("securityConfig")}
-              </CardTitle>
-              <CardDescription className="text-sm">
-                {t("securityConfigDesc")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {configsByCategory.security.map((item) =>
-                  renderConfigField(item.key, item)
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Other Configuration */}
-        {configsByCategory.other && (
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                {categoryIcons.other}
-                {t("otherConfig")}
-              </CardTitle>
-              <CardDescription className="text-sm">
-                {t("otherConfigDesc")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {configsByCategory.other.map((item) =>
-                  renderConfigField(item.key, item)
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
     </div>
   );
 }
