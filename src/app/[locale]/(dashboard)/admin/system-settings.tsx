@@ -13,12 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
   Github,
   Eye,
@@ -33,16 +35,25 @@ import {
   Check,
   Mail,
   Send,
+  Database,
+  Shield,
+  Server,
+  Table2,
+  HardDrive,
+  RefreshCw,
 } from "lucide-react";
 import { testEmailConnection } from "@/server/email-actions";
 import { toast } from "sonner";
-import { getAllConfigs, setConfig } from "@/server/system-config";
+import {
+  getAllConfigs,
+  setConfig,
+  getDatabaseStats,
+} from "@/server/system-config";
 import {
   CONFIG_METADATA,
   OAUTH_PROVIDERS,
   CONFIG_KEYS,
 } from "@/lib/system-config-types";
-import { DatabaseStats } from "./database-stats";
 
 interface ConfigItem {
   key: string;
@@ -56,6 +67,38 @@ interface ConfigItem {
 interface SystemSettingsProps {
   initialConfigs: ConfigItem[];
 }
+
+interface TableStat {
+  name: string;
+  rowCount: number;
+}
+
+interface DatabaseStatsData {
+  type: string;
+  tables: TableStat[];
+  totalRows: number;
+  dbSize?: string;
+}
+
+// Table name display mapping
+const TABLE_NAMES: Record<string, string> = {
+  users: "Users",
+  accounts: "OAuth Accounts",
+  sessions: "Sessions",
+  providers: "DNS Providers",
+  domains: "Domains",
+  records: "DNS Records",
+  domain_shares: "Domain Shares",
+  audit_logs: "Audit Logs",
+  record_changes: "Record Changes",
+  monitor_tasks: "Monitor Tasks",
+  monitor_results: "Monitor Results",
+  alert_rules: "Alert Rules",
+  notification_channels: "Notification Channels",
+  alert_history: "Alert History",
+  system_config: "System Config",
+  verificationTokens: "Verification Tokens",
+};
 
 // Discord icon component
 function DiscordIcon({ className }: { className?: string }) {
@@ -113,6 +156,9 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
     github: true,
   });
   const [testingEmail, setTestingEmail] = useState(false);
+  const [dbStats, setDbStats] = useState<DatabaseStatsData | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [showTableDetails, setShowTableDetails] = useState(false);
 
   // Get AUTH_URL for callback display
   const authUrl =
@@ -123,7 +169,8 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
   // Get email verification status
   const emailVerificationEnabled =
     formValues[CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED] === "true" ||
-    (configs.find((c) => c.key === CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED)?.value === "true");
+    configs.find((c) => c.key === CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED)
+      ?.value === "true";
 
   // Initialize form values
   useEffect(() => {
@@ -133,6 +180,25 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
     });
     setFormValues(values);
   }, [configs]);
+
+  // Fetch database stats
+  const fetchDbStats = () => {
+    startTransition(async () => {
+      try {
+        const data = await getDatabaseStats();
+        setDbStats(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingStats(false);
+      }
+    });
+  };
+
+  useEffect(() => {
+    fetchDbStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = async (key: string) => {
     const value = formValues[key];
@@ -170,12 +236,17 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
           setConfigs(updatedConfigs);
         } else {
           toast.error(result.error || t("configSaveFailed"));
-          // Revert the toggle
-          setFormValues((prev) => ({ ...prev, [key]: enabled ? "false" : "true" }));
+          setFormValues((prev) => ({
+            ...prev,
+            [key]: enabled ? "false" : "true",
+          }));
         }
       } catch {
         toast.error(t("configSaveFailed"));
-        setFormValues((prev) => ({ ...prev, [key]: enabled ? "false" : "true" }));
+        setFormValues((prev) => ({
+          ...prev,
+          [key]: enabled ? "false" : "true",
+        }));
       }
     });
   };
@@ -221,7 +292,8 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
       description: string;
       type: string;
       placeholder?: string;
-    }
+    },
+    compact?: boolean
   ) => {
     const config = configs.find((c) => c.key === key);
     const isPassword = meta.type === "password";
@@ -230,7 +302,7 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
     const hasValue = config?.hasValue || false;
 
     return (
-      <div key={key} className="space-y-2">
+      <div key={key} className={compact ? "space-y-1.5" : "space-y-2"}>
         <div className="flex items-center gap-2">
           <Label htmlFor={key} className="text-sm font-medium">
             {meta.label}
@@ -238,7 +310,7 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
           {hasValue && (
             <Badge
               variant="secondary"
-              className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 h-5"
             >
               <CheckCircle className="h-3 w-3 mr-1" />
               {t("configured")}
@@ -256,7 +328,7 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
               onChange={(e) =>
                 setFormValues((prev) => ({ ...prev, [key]: e.target.value }))
               }
-              className={`${isPassword ? "pr-10" : ""} text-sm`}
+              className={`${isPassword ? "pr-10" : ""} text-sm h-9`}
             />
             {isPassword && (
               <Button
@@ -277,7 +349,8 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
           <Button
             onClick={() => handleSave(key)}
             disabled={isPending}
-            size="default"
+            size="sm"
+            className="h-9 px-3"
           >
             {isSaving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -287,7 +360,9 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground">{meta.description}</p>
+        {!compact && (
+          <p className="text-xs text-muted-foreground">{meta.description}</p>
+        )}
       </div>
     );
   };
@@ -322,183 +397,362 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
     });
   };
 
+  const getDatabaseTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      sqlite: "SQLite",
+      postgres: "PostgreSQL",
+      mysql: "MySQL",
+      turso: "Turso (LibSQL)",
+    };
+    return types[type] || type;
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Database Stats Card */}
-      <DatabaseStats />
+    <Tabs defaultValue="overview" className="space-y-4">
+      {/* Tab Navigation */}
+      <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
+        <TabsTrigger value="overview" className="gap-1.5">
+          <Database className="h-4 w-4" />
+          <span className="hidden sm:inline">{t("overview")}</span>
+        </TabsTrigger>
+        <TabsTrigger value="email" className="gap-1.5">
+          <Mail className="h-4 w-4" />
+          <span className="hidden sm:inline">{t("emailConfig")}</span>
+        </TabsTrigger>
+        <TabsTrigger value="oauth" className="gap-1.5">
+          <Shield className="h-4 w-4" />
+          <span className="hidden sm:inline">OAuth</span>
+        </TabsTrigger>
+      </TabsList>
 
-      {/* Email Configuration Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Mail className="h-5 w-5" />
-            {t("emailConfig")}
-          </CardTitle>
-          <CardDescription className="text-sm">
-            {t("emailConfigDesc")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Email Verification Toggle */}
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base">{t("emailVerificationEnabled")}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t("emailVerificationEnabledDesc")}
-              </p>
+      {/* Overview Tab - Database Stats */}
+      <TabsContent value="overview" className="space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Database className="h-5 w-5 text-primary" />
+                  {t("databaseStats")}
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  {t("databaseStatsDesc")}
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchDbStats}
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
             </div>
-            <Switch
-              checked={emailVerificationEnabled}
-              onCheckedChange={handleToggleEmailVerification}
-              disabled={isPending}
-            />
-          </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loadingStats ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : dbStats ? (
+              <>
+                {/* Quick Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                    <Server className="h-8 w-8 text-primary/70" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("dbType")}
+                      </p>
+                      <p className="font-semibold">
+                        {getDatabaseTypeLabel(dbStats.type)}
+                      </p>
+                    </div>
+                  </div>
 
-          {/* SMTP Configuration */}
-          <div className="space-y-4 pt-2">
-            <h4 className="font-medium text-sm">{t("smtpConfig")}</h4>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                    <Table2 className="h-8 w-8 text-primary/70" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("tablesWithData")}
+                      </p>
+                      <p className="font-semibold">{dbStats.tables.length}</p>
+                    </div>
+                  </div>
 
-            {/* SMTP Fields */}
-            {getProviderConfigs("email")
-              .filter((config) => config.key !== CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED)
-              .map((config) => renderConfigField(config.key, config))}
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                    <Database className="h-8 w-8 text-primary/70" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("totalRows")}
+                      </p>
+                      <p className="font-semibold">
+                        {dbStats.totalRows.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Test Email Button */}
-            <Button
-              variant="outline"
-              onClick={handleTestEmail}
-              disabled={testingEmail || isPending}
-              className="w-full"
-            >
-              {testingEmail ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("testingEmail")}
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  {t("testEmailConnection")}
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* OAuth Providers with Auth URL at top */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Github className="h-5 w-5" />
-            {t("oauthConfig")}
-          </CardTitle>
-          <CardDescription className="text-sm">
-            {t("oauthConfigDesc")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Auth URL Configuration - moved to OAuth card top */}
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <Globe className="h-5 w-5 mt-0.5 text-primary shrink-0" />
-              <div className="flex-1 space-y-3">
-                <div>
-                  <h4 className="font-medium text-sm">{t("siteConfig")}</h4>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t("authUrlNote")}
-                  </p>
+                  {dbStats.dbSize && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                      <HardDrive className="h-8 w-8 text-primary/70" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {t("dbSize")}
+                        </p>
+                        <p className="font-semibold">{dbStats.dbSize}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {renderConfigField(CONFIG_KEYS.AUTH_URL, CONFIG_METADATA[CONFIG_KEYS.AUTH_URL])}
+
+                {/* Table Details - Collapsible */}
+                <Collapsible
+                  open={showTableDetails}
+                  onOpenChange={setShowTableDetails}
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-between hover:bg-muted/50"
+                    >
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {t("tableDetails")}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${showTableDetails ? "rotate-180" : ""}`}
+                      />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {dbStats.tables
+                        .sort((a, b) => b.rowCount - a.rowCount)
+                        .map((table) => (
+                          <div
+                            key={table.name}
+                            className="flex items-center justify-between p-2 rounded border bg-card text-sm"
+                          >
+                            <span className="truncate text-muted-foreground">
+                              {TABLE_NAMES[table.name] || table.name}
+                            </span>
+                            <Badge
+                              variant="secondary"
+                              className="ml-2 shrink-0"
+                            >
+                              {table.rowCount.toLocaleString()}
+                            </Badge>
+                          </div>
+                        ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Email Configuration Tab */}
+      <TabsContent value="email" className="space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Mail className="h-5 w-5 text-primary" />
+              {t("emailConfig")}
+            </CardTitle>
+            <CardDescription className="text-sm">
+              {t("emailConfigDesc")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Email Verification Toggle */}
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
+              <div className="space-y-0.5">
+                <Label className="text-base font-medium">
+                  {t("emailVerificationEnabled")}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("emailVerificationEnabledDesc")}
+                </p>
+              </div>
+              <Switch
+                checked={emailVerificationEnabled}
+                onCheckedChange={handleToggleEmailVerification}
+                disabled={isPending}
+              />
+            </div>
+
+            <Separator />
+
+            {/* SMTP Configuration - Grid Layout */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Server className="h-4 w-4" />
+                {t("smtpConfig")}
+              </h4>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {getProviderConfigs("email")
+                  .filter(
+                    (config) =>
+                      config.key !== CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED
+                  )
+                  .map((config) => renderConfigField(config.key, config, true))}
+              </div>
+
+              {/* Test Email Button */}
+              <Button
+                variant="outline"
+                onClick={handleTestEmail}
+                disabled={testingEmail || isPending}
+                className="w-full sm:w-auto"
+              >
+                {testingEmail ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t("testingEmail")}
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    {t("testEmailConnection")}
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* OAuth Configuration Tab */}
+      <TabsContent value="oauth" className="space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="h-5 w-5 text-primary" />
+              {t("oauthConfig")}
+            </CardTitle>
+            <CardDescription className="text-sm">
+              {t("oauthConfigDesc")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Auth URL Configuration */}
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Globe className="h-5 w-5 mt-0.5 text-primary shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h4 className="font-medium text-sm">{t("siteConfig")}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("authUrlNote")}
+                    </p>
+                  </div>
+                  {renderConfigField(
+                    CONFIG_KEYS.AUTH_URL,
+                    CONFIG_METADATA[CONFIG_KEYS.AUTH_URL],
+                    true
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* OAuth Provider List */}
-          <div className="space-y-3">
-            {Object.entries(OAUTH_PROVIDERS).map(([provider, info]) => {
-              const isConfigured = isProviderConfigured(provider);
-              const isOpen = openProviders[provider] || false;
-              const callbackUrl = authUrl + info.callbackPath;
+            <Separator />
 
-              return (
-                <Collapsible
-                  key={provider}
-                  open={isOpen}
-                  onOpenChange={() => toggleProvider(provider)}
-                >
-                  <div className="border rounded-lg overflow-hidden">
-                    <CollapsibleTrigger asChild>
-                      <button className="flex items-center justify-between w-full p-4 hover:bg-accent/50 transition-colors text-left">
-                        <div className="flex items-center gap-3">
-                          {getProviderIcon(provider)}
-                          <span className="font-medium">{info.name}</span>
-                          {isConfigured && (
-                            <Badge className="bg-green-600 hover:bg-green-700 text-xs">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              {t("enabled")}
-                            </Badge>
-                          )}
-                        </div>
-                        <ChevronDown
-                          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="px-4 pb-4 space-y-4 border-t bg-muted/30">
-                        {/* Callback URL display */}
-                        <div className="pt-4 space-y-2">
-                          <Label className="text-sm font-medium">
-                            {t("callbackUrl")}
-                          </Label>
-                          <div className="flex gap-2">
-                            <Input
-                              value={callbackUrl}
-                              readOnly
-                              className="text-sm font-mono bg-muted"
-                            />
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => copyCallback(provider)}
-                            >
-                              {copiedCallback === provider ? (
-                                <Check className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </Button>
+            {/* OAuth Provider List */}
+            <div className="space-y-3">
+              {Object.entries(OAUTH_PROVIDERS).map(([provider, info]) => {
+                const isConfigured = isProviderConfigured(provider);
+                const isOpen = openProviders[provider] || false;
+                const callbackUrl = authUrl + info.callbackPath;
+
+                return (
+                  <Collapsible
+                    key={provider}
+                    open={isOpen}
+                    onOpenChange={() => toggleProvider(provider)}
+                  >
+                    <div className="border rounded-lg overflow-hidden">
+                      <CollapsibleTrigger asChild>
+                        <button className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors text-left">
+                          <div className="flex items-center gap-3">
+                            {getProviderIcon(provider)}
+                            <span className="font-medium">{info.name}</span>
+                            {isConfigured && (
+                              <Badge className="bg-green-600 hover:bg-green-700 text-xs h-5">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                {t("enabled")}
+                              </Badge>
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {t("callbackUrlDesc")}
-                          </p>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="px-4 pb-4 space-y-4 border-t bg-muted/20">
+                          {/* Callback URL display */}
+                          <div className="pt-4 space-y-2">
+                            <Label className="text-sm font-medium">
+                              {t("callbackUrl")}
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input
+                                value={callbackUrl}
+                                readOnly
+                                className="text-sm font-mono bg-muted h-9"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 px-3"
+                                onClick={() => copyCallback(provider)}
+                              >
+                                {copiedCallback === provider ? (
+                                  <Check className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Copy className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {t("callbackUrlDesc")}
+                            </p>
+                          </div>
+
+                          {/* Provider config fields - Grid */}
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {getProviderConfigs(provider).map((config) =>
+                              renderConfigField(config.key, config, true)
+                            )}
+                          </div>
+
+                          {/* Docs link */}
+                          <a
+                            href={info.docsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                          >
+                            {t("setupGuide", { provider: info.name })}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
                         </div>
-
-                        {/* Provider config fields */}
-                        {getProviderConfigs(provider).map((config) =>
-                          renderConfigField(config.key, config)
-                        )}
-
-                        {/* Docs link */}
-                        <a
-                          href={info.docsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                        >
-                          {t("setupGuide", { provider: info.name })}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }

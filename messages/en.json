@@ -313,6 +313,7 @@
     "roleUpdated": "Role updated successfully"
   },
   "SystemSettings": {
+    "overview": "Overview",
     "title": "System Settings",
     "subtitle": "Configure system-wide settings",
     "siteConfig": "Site Configuration",

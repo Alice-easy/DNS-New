@@ -304,6 +304,7 @@
     "systemSettings": "系统设置"
   },
   "SystemSettings": {
+    "overview": "概览",
     "title": "系统设置",
     "subtitle": "配置系统全局设置",
     "siteConfig": "站点配置",

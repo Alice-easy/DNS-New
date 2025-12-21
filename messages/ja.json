@@ -313,6 +313,7 @@
     "roleUpdated": "役割を更新しました"
   },
   "SystemSettings": {
+    "overview": "概要",
     "title": "システム設定",
     "subtitle": "システム全体の設定",
     "siteConfig": "サイト設定",
