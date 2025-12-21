@@ -8,6 +8,15 @@ export const CONFIG_KEYS = {
   // 站点配置
   AUTH_URL: "auth_url",
 
+  // 邮件配置 (SMTP)
+  SMTP_HOST: "smtp_host",
+  SMTP_PORT: "smtp_port",
+  SMTP_USER: "smtp_user",
+  SMTP_PASSWORD: "smtp_password",
+  SMTP_FROM_EMAIL: "smtp_from_email",
+  SMTP_FROM_NAME: "smtp_from_name",
+  EMAIL_VERIFICATION_ENABLED: "email_verification_enabled",
+
   // GitHub OAuth
   GITHUB_CLIENT_ID: "github_client_id",
   GITHUB_CLIENT_SECRET: "github_client_secret",
@@ -27,6 +36,7 @@ export const CONFIG_KEYS = {
 
 // 敏感配置（需要加密存储）
 export const SENSITIVE_KEYS: string[] = [
+  CONFIG_KEYS.SMTP_PASSWORD,
   CONFIG_KEYS.GITHUB_CLIENT_SECRET,
   CONFIG_KEYS.GOOGLE_CLIENT_SECRET,
   CONFIG_KEYS.DISCORD_CLIENT_SECRET,
@@ -39,9 +49,9 @@ export const CONFIG_METADATA: Record<
   {
     label: string;
     description: string;
-    type: "text" | "password" | "url";
+    type: "text" | "password" | "url" | "number" | "switch";
     placeholder?: string;
-    category: "site" | "github" | "google" | "discord" | "gitee";
+    category: "site" | "email" | "github" | "google" | "discord" | "gitee";
     order: number;
   }
 > = {
@@ -53,6 +63,63 @@ export const CONFIG_METADATA: Record<
     placeholder: "https://dns.example.com",
     category: "site",
     order: 0,
+  },
+
+  // 邮件配置
+  [CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED]: {
+    label: "启用邮箱验证",
+    description: "开启后，新用户注册时需要验证邮箱",
+    type: "switch",
+    category: "email",
+    order: 1,
+  },
+  [CONFIG_KEYS.SMTP_HOST]: {
+    label: "SMTP 服务器",
+    description: "SMTP 邮件服务器地址",
+    type: "text",
+    placeholder: "smtp.example.com",
+    category: "email",
+    order: 2,
+  },
+  [CONFIG_KEYS.SMTP_PORT]: {
+    label: "SMTP 端口",
+    description: "SMTP 端口（通常为 465 或 587）",
+    type: "number",
+    placeholder: "465",
+    category: "email",
+    order: 3,
+  },
+  [CONFIG_KEYS.SMTP_USER]: {
+    label: "SMTP 用户名",
+    description: "SMTP 认证用户名（通常是邮箱地址）",
+    type: "text",
+    placeholder: "noreply@example.com",
+    category: "email",
+    order: 4,
+  },
+  [CONFIG_KEYS.SMTP_PASSWORD]: {
+    label: "SMTP 密码",
+    description: "SMTP 认证密码或授权码",
+    type: "password",
+    placeholder: "••••••••",
+    category: "email",
+    order: 5,
+  },
+  [CONFIG_KEYS.SMTP_FROM_EMAIL]: {
+    label: "发件人邮箱",
+    description: "发送邮件时显示的发件人地址",
+    type: "text",
+    placeholder: "noreply@example.com",
+    category: "email",
+    order: 6,
+  },
+  [CONFIG_KEYS.SMTP_FROM_NAME]: {
+    label: "发件人名称",
+    description: "发送邮件时显示的发件人名称",
+    type: "text",
+    placeholder: "DNS Manager",
+    category: "email",
+    order: 7,
   },
 
   // GitHub OAuth

@@ -18,6 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
 import {
   Github,
   Eye,
@@ -30,7 +31,10 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Mail,
+  Send,
 } from "lucide-react";
+import { testEmailConnection } from "@/server/email-actions";
 import { toast } from "sonner";
 import { getAllConfigs, setConfig } from "@/server/system-config";
 import {
@@ -108,12 +112,18 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
   const [openProviders, setOpenProviders] = useState<Record<string, boolean>>({
     github: true,
   });
+  const [testingEmail, setTestingEmail] = useState(false);
 
   // Get AUTH_URL for callback display
   const authUrl =
     formValues[CONFIG_KEYS.AUTH_URL] ||
     configs.find((c) => c.key === CONFIG_KEYS.AUTH_URL)?.value ||
     "https://your-domain.com";
+
+  // Get email verification status
+  const emailVerificationEnabled =
+    formValues[CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED] === "true" ||
+    (configs.find((c) => c.key === CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED)?.value === "true");
 
   // Initialize form values
   useEffect(() => {
@@ -145,6 +155,45 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
         setSavingKey(null);
       }
     });
+  };
+
+  const handleToggleEmailVerification = async (enabled: boolean) => {
+    const key = CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED;
+    setFormValues((prev) => ({ ...prev, [key]: enabled ? "true" : "false" }));
+
+    startTransition(async () => {
+      try {
+        const result = await setConfig(key, enabled ? "true" : "false");
+        if (result.success) {
+          toast.success(t("configSaved"));
+          const updatedConfigs = await getAllConfigs();
+          setConfigs(updatedConfigs);
+        } else {
+          toast.error(result.error || t("configSaveFailed"));
+          // Revert the toggle
+          setFormValues((prev) => ({ ...prev, [key]: enabled ? "false" : "true" }));
+        }
+      } catch {
+        toast.error(t("configSaveFailed"));
+        setFormValues((prev) => ({ ...prev, [key]: enabled ? "false" : "true" }));
+      }
+    });
+  };
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const result = await testEmailConnection();
+      if (result.success) {
+        toast.success(t("emailTestSuccess"));
+      } else {
+        toast.error(result.error || t("emailTestFailed"));
+      }
+    } catch {
+      toast.error(t("emailTestFailed"));
+    } finally {
+      setTestingEmail(false);
+    }
   };
 
   const togglePasswordVisibility = (key: string) => {
@@ -277,6 +326,65 @@ export function SystemSettings({ initialConfigs }: SystemSettingsProps) {
     <div className="space-y-6">
       {/* Database Stats Card */}
       <DatabaseStats />
+
+      {/* Email Configuration Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Mail className="h-5 w-5" />
+            {t("emailConfig")}
+          </CardTitle>
+          <CardDescription className="text-sm">
+            {t("emailConfigDesc")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Email Verification Toggle */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label className="text-base">{t("emailVerificationEnabled")}</Label>
+              <p className="text-sm text-muted-foreground">
+                {t("emailVerificationEnabledDesc")}
+              </p>
+            </div>
+            <Switch
+              checked={emailVerificationEnabled}
+              onCheckedChange={handleToggleEmailVerification}
+              disabled={isPending}
+            />
+          </div>
+
+          {/* SMTP Configuration */}
+          <div className="space-y-4 pt-2">
+            <h4 className="font-medium text-sm">{t("smtpConfig")}</h4>
+
+            {/* SMTP Fields */}
+            {getProviderConfigs("email")
+              .filter((config) => config.key !== CONFIG_KEYS.EMAIL_VERIFICATION_ENABLED)
+              .map((config) => renderConfigField(config.key, config))}
+
+            {/* Test Email Button */}
+            <Button
+              variant="outline"
+              onClick={handleTestEmail}
+              disabled={testingEmail || isPending}
+              className="w-full"
+            >
+              {testingEmail ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("testingEmail")}
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  {t("testEmailConnection")}
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* OAuth Providers with Auth URL at top */}
       <Card>
