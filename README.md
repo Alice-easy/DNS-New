@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
-[English](#features) | [简体中文](#功能特性) | [日本語](#機能)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
 </div>
 
@@ -24,10 +24,10 @@ A modern, unified DNS management platform that consolidates multiple DNS provide
 | Provider | Status | Smart Lines |
 |:--------:|:------:|:-----------:|
 | Cloudflare | ✅ | - |
-| Aliyun DNS | ✅ | ✅ 电信/联通/移动/教育网等 |
-| Tencent DNSPod | ✅ | ✅ 电信/联通/移动/境外等 |
+| Aliyun DNS | ✅ | ✅ Telecom/Unicom/Mobile/Edu |
+| Tencent DNSPod | ✅ | ✅ Telecom/Unicom/Mobile/Overseas |
 | AWS Route53 | ✅ | ✅ Geo Routing |
-| Huawei Cloud | ✅ | ✅ 电信/联通/移动等 |
+| Huawei Cloud | ✅ | ✅ Telecom/Unicom/Mobile |
 | GoDaddy | ✅ | - |
 | Namecheap | ✅ | - |
 
@@ -52,7 +52,7 @@ A modern, unified DNS management platform that consolidates multiple DNS provide
 ### 📋 DNS Management
 
 - **Full CRUD** — A, AAAA, CNAME, MX, TXT, NS, CAA, SRV records
-- **Smart Lines** — Geo-based routing for Chinese ISPs (电信/联通/移动)
+- **Smart Lines** — ISP-based routing for Chinese carriers (Telecom/Unicom/Mobile)
 - **Batch Import/Export** — JSON and CSV format support
 - **Change Detection** — Track modifications during sync
 
