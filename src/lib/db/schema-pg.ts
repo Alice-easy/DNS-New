@@ -354,6 +354,20 @@ export const alertHistoryRelations = relations(alertHistory, ({ one }) => ({
   acknowledgedByUser: one(users, { fields: [alertHistory.acknowledgedBy], references: [users.id] }),
 }));
 
+// System Configuration
+export const systemConfig = pgTable("system_config", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  encrypted: boolean("encrypted").default(false),
+  description: text("description"),
+  updatedAt: timestamp("updated_at", { mode: "date" }).$defaultFn(() => new Date()),
+  updatedBy: text("updated_by").references(() => users.id, { onDelete: "set null" }),
+});
+
+export const systemConfigRelations = relations(systemConfig, ({ one }) => ({
+  updatedByUser: one(users, { fields: [systemConfig.updatedBy], references: [users.id] }),
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -381,3 +395,5 @@ export type AlertRuleChannel = typeof alertRuleChannels.$inferSelect;
 export type NewAlertRuleChannel = typeof alertRuleChannels.$inferInsert;
 export type AlertHistoryItem = typeof alertHistory.$inferSelect;
 export type NewAlertHistoryItem = typeof alertHistory.$inferInsert;
+export type SystemConfig = typeof systemConfig.$inferSelect;
+export type NewSystemConfig = typeof systemConfig.$inferInsert;

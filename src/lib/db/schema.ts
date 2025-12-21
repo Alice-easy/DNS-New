@@ -484,6 +484,26 @@ export const alertHistoryRelations = relations(alertHistory, ({ one }) => ({
   }),
 }));
 
+// System Configuration (系统配置)
+export const systemConfig = sqliteTable("system_config", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  encrypted: integer("encrypted", { mode: "boolean" }).default(false), // 是否加密存储
+  description: text("description"),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date()
+  ),
+  updatedBy: text("updated_by").references(() => users.id, { onDelete: "set null" }),
+});
+
+// System Config Relations
+export const systemConfigRelations = relations(systemConfig, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [systemConfig.updatedBy],
+    references: [users.id],
+  }),
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -511,3 +531,5 @@ export type AlertRuleChannel = typeof alertRuleChannels.$inferSelect;
 export type NewAlertRuleChannel = typeof alertRuleChannels.$inferInsert;
 export type AlertHistoryItem = typeof alertHistory.$inferSelect;
 export type NewAlertHistoryItem = typeof alertHistory.$inferInsert;
+export type SystemConfig = typeof systemConfig.$inferSelect;
+export type NewSystemConfig = typeof systemConfig.$inferInsert;

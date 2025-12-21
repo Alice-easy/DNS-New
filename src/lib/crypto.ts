@@ -135,3 +135,72 @@ export function isNewEncryptionFormat(encryptedData: string): boolean {
     return false;
   }
 }
+
+/**
+ * Encrypt a simple string value using AES-256-GCM
+ * Used for system configuration values stored in database
+ * @param value - The string to encrypt
+ * @returns Base64 encoded encrypted string
+ */
+export function encrypt(value: string): string {
+  // Generate random salt and IV
+  const salt = crypto.randomBytes(SALT_LENGTH);
+  const iv = crypto.randomBytes(IV_LENGTH);
+
+  // Derive key from master key
+  const key = deriveKey(salt);
+
+  // Create cipher
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+
+  // Encrypt
+  const encrypted = Buffer.concat([
+    cipher.update(value, "utf8"),
+    cipher.final(),
+  ]);
+
+  // Get auth tag
+  const authTag = cipher.getAuthTag();
+
+  // Combine: salt + iv + authTag + encrypted
+  const combined = Buffer.concat([salt, iv, authTag, encrypted]);
+
+  return combined.toString("base64");
+}
+
+/**
+ * Decrypt a string value encrypted with encrypt()
+ * @param encryptedValue - Base64 encoded encrypted string
+ * @returns Decrypted string
+ */
+export function decrypt(encryptedValue: string): string {
+  try {
+    const combined = Buffer.from(encryptedValue, "base64");
+
+    // Extract components
+    const salt = combined.subarray(0, SALT_LENGTH);
+    const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+    const authTag = combined.subarray(
+      SALT_LENGTH + IV_LENGTH,
+      SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
+    );
+    const encrypted = combined.subarray(SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH);
+
+    // Derive key
+    const key = deriveKey(salt);
+
+    // Create decipher
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(authTag);
+
+    // Decrypt
+    const decrypted = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]);
+
+    return decrypted.toString("utf8");
+  } catch {
+    throw new Error("Failed to decrypt value: Invalid or corrupted data");
+  }
+}

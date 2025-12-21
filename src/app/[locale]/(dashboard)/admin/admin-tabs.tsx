@@ -29,10 +29,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, Globe, Shield, Trash2, Share2 } from "lucide-react";
+import { Users, Globe, Shield, Trash2, Share2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { updateUserRole, deleteUser } from "@/server/admin";
 import { DomainSharesDialog } from "./domain-shares-dialog";
+import { SystemSettings } from "./system-settings";
 
 interface User {
   id: string;
@@ -55,12 +56,29 @@ interface Domain {
   ownerEmail: string | null;
 }
 
+interface ConfigItem {
+  key: string;
+  value: string;
+  hasValue: boolean;
+  encrypted: boolean;
+  description: string | null;
+  updatedAt: Date | null;
+}
+
+interface DatabaseInfo {
+  type: string;
+  isEdgeCompatible: boolean;
+  configured: boolean;
+}
+
 interface AdminTabsProps {
   users: User[];
   domains: Domain[];
+  configs: ConfigItem[];
+  databaseInfo: DatabaseInfo;
 }
 
-export function AdminTabs({ users, domains }: AdminTabsProps) {
+export function AdminTabs({ users, domains, configs, databaseInfo }: AdminTabsProps) {
   const t = useTranslations("Admin");
   const tCommon = useTranslations("Common");
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
@@ -97,6 +115,10 @@ export function AdminTabs({ users, domains }: AdminTabsProps) {
           <TabsTrigger value="domains" className="gap-2">
             <Globe className="h-4 w-4" />
             {t("domains")}
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2">
+            <Settings className="h-4 w-4" />
+            {t("systemSettings")}
           </TabsTrigger>
         </TabsList>
 
@@ -228,6 +250,11 @@ export function AdminTabs({ users, domains }: AdminTabsProps) {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* System Settings Tab */}
+        <TabsContent value="settings">
+          <SystemSettings initialConfigs={configs} databaseInfo={databaseInfo} />
         </TabsContent>
       </Tabs>
 
