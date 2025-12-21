@@ -191,3 +191,32 @@ export async function getDatabaseInfo(): Promise<{
     configured: true, // SQLite 默认配置好了
   };
 }
+
+/**
+ * 获取 OAuth 配置状态（用于登录页面动态显示）
+ * 此函数不需要认证，返回的是是否配置而非实际值
+ */
+export async function getOAuthStatus(): Promise<{
+  github: boolean;
+  // 未来可以扩展更多 OAuth 提供商
+}> {
+  // 先检查环境变量
+  const githubFromEnv = !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET);
+
+  if (githubFromEnv) {
+    return { github: true };
+  }
+
+  // 再检查数据库配置
+  try {
+    const githubClientId = await getConfig(CONFIG_KEYS.GITHUB_CLIENT_ID);
+    const githubClientSecret = await getConfig(CONFIG_KEYS.GITHUB_CLIENT_SECRET);
+
+    return {
+      github: !!(githubClientId && githubClientSecret),
+    };
+  } catch {
+    // 数据库可能还没初始化
+    return { github: false };
+  }
+}
