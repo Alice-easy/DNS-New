@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
+import Discord from "next-auth/providers/discord";
 import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
@@ -34,6 +36,64 @@ declare module "@auth/core/jwt" {
   }
 }
 
+// Build OAuth providers array based on environment configuration
+const oauthProviders = [];
+
+// GitHub OAuth
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  oauthProviders.push(
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    })
+  );
+}
+
+// Google OAuth
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  oauthProviders.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+
+// Discord OAuth
+if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+  oauthProviders.push(
+    Discord({
+      clientId: process.env.DISCORD_CLIENT_ID,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+    })
+  );
+}
+
+// Gitee OAuth (custom provider)
+if (process.env.GITEE_CLIENT_ID && process.env.GITEE_CLIENT_SECRET) {
+  oauthProviders.push({
+    id: "gitee",
+    name: "Gitee",
+    type: "oauth" as const,
+    authorization: {
+      url: "https://gitee.com/oauth/authorize",
+      params: { scope: "user_info" },
+    },
+    token: "https://gitee.com/oauth/token",
+    userinfo: "https://gitee.com/api/v5/user",
+    profile(profile: { id: number; login: string; name: string; email: string; avatar_url: string }) {
+      return {
+        id: profile.id.toString(),
+        name: profile.name || profile.login,
+        email: profile.email,
+        image: profile.avatar_url,
+      };
+    },
+    clientId: process.env.GITEE_CLIENT_ID,
+    clientSecret: process.env.GITEE_CLIENT_SECRET,
+  });
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
     usersTable: users,
@@ -42,10 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verificationTokensTable: verificationTokens,
   }),
   providers: [
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
+    ...oauthProviders,
     Credentials({
       name: "credentials",
       credentials: {

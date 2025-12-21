@@ -8,10 +8,26 @@
 import { auth } from "@/lib/auth";
 import { db, systemConfig } from "@/lib/db";
 import { isAdmin } from "@/lib/permissions";
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { CONFIG_KEYS, SENSITIVE_KEYS, CONFIG_METADATA } from "@/lib/system-config-types";
+import {
+  users,
+  accounts,
+  sessions,
+  providers,
+  domains,
+  records,
+  domainShares,
+  auditLogs,
+  recordChanges,
+  monitorTasks,
+  monitorResults,
+  alertRules,
+  notificationChannels,
+  alertHistory,
+} from "@/lib/db/schema";
 
 /**
  * 获取单个配置值
@@ -193,30 +209,134 @@ export async function getDatabaseInfo(): Promise<{
 }
 
 /**
+ * 获取数据库统计信息（仅管理员）
+ */
+export async function getDatabaseStats(): Promise<{
+  type: string;
+  tables: Array<{
+    name: string;
+    rowCount: number;
+  }>;
+  totalRows: number;
+  dbSize?: string;
+}> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const admin = await isAdmin(session.user.id);
+  if (!admin) {
+    throw new Error("Admin access required");
+  }
+
+  const dbType = process.env.DATABASE_TYPE || "sqlite";
+
+  // 使用 Drizzle ORM 查询各表行数
+  const tableQueries = await Promise.all([
+    db.select({ count: count() }).from(users).then(r => ({ name: "users", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(accounts).then(r => ({ name: "accounts", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(sessions).then(r => ({ name: "sessions", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(providers).then(r => ({ name: "providers", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(domains).then(r => ({ name: "domains", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(records).then(r => ({ name: "records", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(domainShares).then(r => ({ name: "domain_shares", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(auditLogs).then(r => ({ name: "audit_logs", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(recordChanges).then(r => ({ name: "record_changes", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(monitorTasks).then(r => ({ name: "monitor_tasks", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(monitorResults).then(r => ({ name: "monitor_results", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(alertRules).then(r => ({ name: "alert_rules", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(notificationChannels).then(r => ({ name: "notification_channels", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(alertHistory).then(r => ({ name: "alert_history", rowCount: r[0]?.count || 0 })),
+    db.select({ count: count() }).from(systemConfig).then(r => ({ name: "system_config", rowCount: r[0]?.count || 0 })),
+  ]);
+
+  const tables = tableQueries.filter(t => t.rowCount > 0);
+  const totalRows = tableQueries.reduce((sum, t) => sum + t.rowCount, 0);
+
+  // 获取数据库大小（仅 SQLite，使用文件大小）
+  let dbSize: string | undefined;
+  if (dbType === "sqlite") {
+    try {
+      const fs = await import("fs");
+      const dbPath = process.env.DATABASE_URL || "./data/sqlite.db";
+      const stats = fs.statSync(dbPath);
+      dbSize = formatBytes(stats.size);
+    } catch {
+      dbSize = "N/A";
+    }
+  }
+
+  return {
+    type: dbType,
+    tables,
+    totalRows,
+    dbSize,
+  };
+}
+
+// 格式化字节大小
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+/**
  * 获取 OAuth 配置状态（用于登录页面动态显示）
  * 此函数不需要认证，返回的是是否配置而非实际值
  */
 export async function getOAuthStatus(): Promise<{
   github: boolean;
-  // 未来可以扩展更多 OAuth 提供商
+  google: boolean;
+  discord: boolean;
+  gitee: boolean;
 }> {
-  // 先检查环境变量
+  // 检查环境变量配置
   const githubFromEnv = !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET);
+  const googleFromEnv = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  const discordFromEnv = !!(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET);
+  const giteeFromEnv = !!(process.env.GITEE_CLIENT_ID && process.env.GITEE_CLIENT_SECRET);
 
-  if (githubFromEnv) {
-    return { github: true };
-  }
+  // 如果环境变量已配置，直接返回
+  const result = {
+    github: githubFromEnv,
+    google: googleFromEnv,
+    discord: discordFromEnv,
+    gitee: giteeFromEnv,
+  };
 
-  // 再检查数据库配置
+  // 检查数据库配置（如果环境变量未配置）
   try {
-    const githubClientId = await getConfig(CONFIG_KEYS.GITHUB_CLIENT_ID);
-    const githubClientSecret = await getConfig(CONFIG_KEYS.GITHUB_CLIENT_SECRET);
+    if (!result.github) {
+      const githubClientId = await getConfig(CONFIG_KEYS.GITHUB_CLIENT_ID);
+      const githubClientSecret = await getConfig(CONFIG_KEYS.GITHUB_CLIENT_SECRET);
+      result.github = !!(githubClientId && githubClientSecret);
+    }
 
-    return {
-      github: !!(githubClientId && githubClientSecret),
-    };
+    if (!result.google) {
+      const googleClientId = await getConfig(CONFIG_KEYS.GOOGLE_CLIENT_ID);
+      const googleClientSecret = await getConfig(CONFIG_KEYS.GOOGLE_CLIENT_SECRET);
+      result.google = !!(googleClientId && googleClientSecret);
+    }
+
+    if (!result.discord) {
+      const discordClientId = await getConfig(CONFIG_KEYS.DISCORD_CLIENT_ID);
+      const discordClientSecret = await getConfig(CONFIG_KEYS.DISCORD_CLIENT_SECRET);
+      result.discord = !!(discordClientId && discordClientSecret);
+    }
+
+    if (!result.gitee) {
+      const giteeClientId = await getConfig(CONFIG_KEYS.GITEE_CLIENT_ID);
+      const giteeClientSecret = await getConfig(CONFIG_KEYS.GITEE_CLIENT_SECRET);
+      result.gitee = !!(giteeClientId && giteeClientSecret);
+    }
+
+    return result;
   } catch {
     // 数据库可能还没初始化
-    return { github: false };
+    return result;
   }
 }

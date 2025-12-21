@@ -34,6 +34,27 @@ export async function handleGitHubSignIn() {
 }
 
 /**
+ * Handle Google OAuth sign in
+ */
+export async function handleGoogleSignIn() {
+  await signIn("google", { redirectTo: "/" });
+}
+
+/**
+ * Handle Discord OAuth sign in
+ */
+export async function handleDiscordSignIn() {
+  await signIn("discord", { redirectTo: "/" });
+}
+
+/**
+ * Handle Gitee OAuth sign in
+ */
+export async function handleGiteeSignIn() {
+  await signIn("gitee", { redirectTo: "/" });
+}
+
+/**
  * Handle user sign out
  */
 export async function handleSignOut() {
