@@ -9,6 +9,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
+[![GitHub stars](https://img.shields.io/github/stars/Alice-easy/DNS-New?style=social)](https://github.com/Alice-easy/DNS-New/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Alice-easy/DNS-New?style=social)](https://github.com/Alice-easy/DNS-New/network/members)
+[![GitHub issues](https://img.shields.io/github/issues/Alice-easy/DNS-New)](https://github.com/Alice-easy/DNS-New/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/Alice-easy/DNS-New)](https://github.com/Alice-easy/DNS-New/commits/main)
+
 [English](./README.md) | 简体中文 | [日本語](./README.ja.md)
 
 </div>
@@ -189,5 +194,9 @@ MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
 <div align="center">
 
 **使用 Next.js、shadcn/ui 和 Drizzle ORM 用心构建 ❤️**
+
+<br />
+
+[![Made by Alice](https://img.shields.io/badge/Made%20by-Alice--easy-blueviolet?logo=github)](https://github.com/Alice-easy)
 
 </div>
