@@ -1,90 +1,83 @@
-# DNS Manager
+<div align="center">
+
+# 🌐 DNS Manager
+
+**统一多平台 DNS 管理系统**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
-A unified DNS management system that supports multiple DNS providers (Cloudflare, Aliyun DNS, DNSPod, etc.) with a modern web interface.
+[English](#features) | [简体中文](#功能特性) | [日本語](#機能)
 
-**Language / 语言 / 言語**: English | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
+</div>
 
-## Screenshots
+---
 
-> Screenshots coming soon
+## ✨ Features
 
-<!--
-![Dashboard](./docs/screenshots/dashboard.png)
-![Domains](./docs/screenshots/domains.png)
-![Records](./docs/screenshots/records.png)
--->
+A modern, unified DNS management platform that consolidates multiple DNS providers into a single, intuitive dashboard.
 
-## Features
+### 🔌 Multi-Provider Support
 
-### Core Features
-- **Multi-Provider Support**: Manage DNS records across multiple providers from a single dashboard
-- **Secure Authentication**: GitHub OAuth + Credentials authentication with NextAuth.js
-- **Unified Dashboard**: Overview of all providers, domains, and records
-- **Real-time Sync**: Sync domains and records from providers
-- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
-- **Responsive Design**: Works on desktop and mobile devices
-- **Internationalization**: Full support for English, Chinese, and Japanese
+| Provider | Status | Smart Lines |
+|:--------:|:------:|:-----------:|
+| Cloudflare | ✅ | - |
+| Aliyun DNS | ✅ | ✅ 电信/联通/移动/教育网等 |
+| Tencent DNSPod | ✅ | ✅ 电信/联通/移动/境外等 |
+| AWS Route53 | ✅ | ✅ Geo Routing |
+| Huawei Cloud | ✅ | ✅ 电信/联通/移动等 |
+| GoDaddy | ✅ | - |
+| Namecheap | ✅ | - |
 
-### DNS Management
-- **Record Management**: Full CRUD operations for DNS records (A, AAAA, CNAME, MX, TXT, NS, etc.)
-- **Batch Operations**: Import/Export records in JSON or CSV format
-- **Change Detection**: Track and review DNS record changes during sync
-- **Operation Logs**: Complete audit trail of all DNS operations
+### 🗄️ Multi-Database Support
 
-### Multi-User & Permissions
-- **User Management**: Admin panel for managing users and roles
-- **Domain Sharing**: Share domains with other users with granular permissions
-- **Permission Levels**: Owner, Full Control, Edit, Read-Only access levels
+| Database | Type | Edge Compatible | Best For |
+|:--------:|:----:|:---------------:|:--------:|
+| SQLite | File | ❌ | Local / VPS |
+| PostgreSQL | Server | ✅ | Production |
+| MySQL | Server | ❌ | Production |
+| Turso (libSQL) | Edge | ✅ | Vercel / Cloudflare |
 
-### Monitoring & Alerts
-- **DNS Monitoring**: Monitor DNS record availability, latency, and correctness
-- **Alert Rules**: Configure alerts for monitoring failures, latency thresholds, and record changes
-- **Notification Channels**: Support for Webhook, Discord, and Telegram notifications
-- **Alert History**: Track all triggered alerts and their resolution status
+### 🛡️ Core Capabilities
 
-### Smart DNS (Geo Routing)
-- **Geographic Routing**: Route DNS queries based on visitor's geographic location
-- **Region/Country Targeting**: Configure targets for specific regions or countries
-- **Load Balancing**: Round-robin, weighted, and failover strategies
-- **Health Checks**: Automatic health monitoring for routing targets
+- **📊 Unified Dashboard** — Manage all providers, domains, and records in one place
+- **🔐 Secure Auth** — GitHub OAuth + Email/Password with NextAuth.js v5
+- **🌍 Internationalization** — English, 简体中文, 日本語
+- **📱 Responsive Design** — Desktop, tablet, and mobile optimized
+- **🔄 Real-time Sync** — Sync domains and records from providers
+- **📝 Audit Logs** — Complete operation history tracking
 
-### Security Features
+### 📋 DNS Management
 
-- **AES-256-GCM Encryption**: Provider credentials are encrypted at rest
-- **Smart Key Fallback**: Uses AUTH_SECRET for encryption if dedicated key is not set
-- **Rate Limiting**: Protection against brute-force attacks on login/registration
-- **Input Validation**: DNS record validation before sending to providers
-- **Strong Password Policy**: Requires 8+ characters with uppercase, lowercase, and numbers
-- **Secure Logging**: Error details hidden in production logs
+- **Full CRUD** — A, AAAA, CNAME, MX, TXT, NS, CAA, SRV records
+- **Smart Lines** — Geo-based routing for Chinese ISPs (电信/联通/移动)
+- **Batch Import/Export** — JSON and CSV format support
+- **Change Detection** — Track modifications during sync
 
-## Tech Stack
+### 👥 Multi-User & Permissions
 
-| Category | Technology |
-|----------|------------|
-| Framework | Next.js 16 (App Router + Turbopack) |
-| Language | TypeScript 5.0 |
-| Styling | Tailwind CSS 4 + shadcn/ui |
-| Database | SQLite with Drizzle ORM |
-| Authentication | NextAuth.js v5 |
-| i18n | next-intl |
-| Form Handling | react-hook-form |
+- **Role Management** — Admin and User roles
+- **Domain Sharing** — Share with granular permissions
+- **Access Levels** — Owner / Full Control / Edit / Read-Only
 
-## Supported DNS Providers
+### 📡 Monitoring & Alerts
 
-| Provider | Status | Notes |
-|----------|--------|-------|
-| Cloudflare | ✅ Supported | Full API support with proxy status |
-| Aliyun DNS | ✅ Supported | Full API support |
-| Tencent DNSPod | ✅ Supported | Full API support |
-| AWS Route53 | 🔜 Coming Soon | Planned |
-| GoDaddy | 🔜 Coming Soon | Planned |
+- **DNS Monitoring** — Availability, latency, and correctness checks
+- **Alert Rules** — Configurable thresholds and triggers
+- **Notifications** — Webhook, Discord, Telegram channels
 
-## Getting Started
+### 🔒 Security
+
+- **AES-256-GCM** — Credentials encrypted at rest
+- **Rate Limiting** — Brute-force protection
+- **Input Validation** — DNS record validation before API calls
+- **Strong Passwords** — 8+ chars with mixed case and numbers
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -93,234 +86,108 @@ A unified DNS management system that supports multiple DNS providers (Cloudflare
 
 ### Installation
 
-1. Clone the repository:
-
 ```bash
+# Clone
 git clone https://github.com/Alice-easy/DNS-New.git
 cd DNS-New
-```
 
-2. Install dependencies:
-
-```bash
+# Install
 npm install
-```
 
-3. Configure environment variables:
-
-```bash
+# Configure (only AUTH_SECRET is required!)
 cp .env.example .env
-```
+# Edit .env: AUTH_SECRET="your-secret-key"
 
-Edit `.env` with your secret key:
-
-```env
-# Required - Generate with: openssl rand -base64 32
-AUTH_SECRET="your-secret-key-here"
-
-# Optional - All other settings have defaults or can be skipped
-# DATABASE_URL="./data/sqlite.db"
-# GITHUB_CLIENT_ID=""
-# GITHUB_CLIENT_SECRET=""
-```
-
-> **Note**: Only `AUTH_SECRET` is required! The encryption key defaults to using AUTH_SECRET, and GitHub OAuth is optional.
-
-4. Initialize the database:
-
-```bash
+# Database
 npm run db:push
-```
 
-5. Start the development server:
-
-```bash
+# Run
 npm run dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) 🎉
 
-### Quick Deploy
+### One-liner Deploy
 
 ```bash
-# One-liner setup (Linux/macOS)
 cp .env.example .env && \
   sed -i "s/your-secret-key-here/$(openssl rand -base64 32)/" .env && \
   npm install && npm run db:push && npm run build && npm start
 ```
 
-### Updating the Project
+---
 
-When a new version is released, follow these steps to update:
+## ⚙️ Configuration
+
+### Minimal Setup
+
+Only **one** environment variable is required:
+
+```env
+AUTH_SECRET="your-secret-key-here"  # Generate: openssl rand -base64 32
+```
+
+### Optional: Database Type
+
+```env
+DATABASE_TYPE="sqlite"  # sqlite (default), postgres, mysql, turso
+```
+
+### All Other Settings
+
+Configure via **Admin Panel → System Settings**:
+- GitHub OAuth credentials
+- Database connection strings
+- Encryption keys
+- And more...
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|:---------|:-----------|
+| Framework | Next.js 16 (App Router + Turbopack) |
+| Language | TypeScript 5.0 |
+| Styling | Tailwind CSS 4 + shadcn/ui |
+| Database | Drizzle ORM (SQLite/PostgreSQL/MySQL/Turso) |
+| Auth | NextAuth.js v5 |
+| i18n | next-intl |
+
+---
+
+## 📜 Scripts
 
 ```bash
-# Pull the latest code
-git pull
-
-# Update dependencies
-npm install
-
-# If there are database schema changes, run migration
-npm run db:push
-```
-
-> **Note**: Before updating, it's recommended to backup your `data/` directory which contains the SQLite database.
-
-### Creating GitHub OAuth App (Optional)
-
-GitHub OAuth is optional. You can use email/password login without it.
-
-1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Click "New OAuth App"
-3. Fill in:
-   - Application name: `DNS Manager`
-   - Homepage URL: `http://localhost:3000`
-   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
-4. Copy the Client ID and Client Secret to your `.env`
-
-## Project Structure
-
-```
-dns-manager/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── [locale]/           # Locale-based routing
-│   │   │   ├── (dashboard)/    # Dashboard pages
-│   │   │   │   ├── admin/      # Admin panel
-│   │   │   │   ├── alerts/     # Alert management
-│   │   │   │   ├── changes/    # Change detection
-│   │   │   │   ├── domains/    # Domain management
-│   │   │   │   ├── geo-dns/    # Smart DNS (geo routing)
-│   │   │   │   ├── logs/       # Operation logs
-│   │   │   │   ├── monitoring/ # DNS monitoring
-│   │   │   │   ├── providers/  # Provider management
-│   │   │   │   ├── records/    # Record management
-│   │   │   │   └── settings/   # User settings
-│   │   │   ├── login/          # Login page
-│   │   │   └── register/       # Registration page
-│   │   └── api/auth/           # NextAuth API routes
-│   ├── components/
-│   │   ├── ui/                 # shadcn/ui components
-│   │   ├── layout/             # Layout components
-│   │   └── language-switcher/  # Language switcher
-│   ├── i18n/                   # Internationalization
-│   │   ├── routing.ts          # Locale routing config
-│   │   ├── request.ts          # Request config
-│   │   └── navigation.ts       # Typed navigation helpers
-│   ├── lib/
-│   │   ├── db/                 # Database (Drizzle)
-│   │   ├── providers/          # DNS provider adapters
-│   │   ├── auth.ts             # NextAuth config
-│   │   ├── crypto.ts           # AES-256-GCM encryption
-│   │   ├── rate-limit.ts       # Rate limiting
-│   │   ├── dns-validation.ts   # DNS record validation
-│   │   ├── permissions.ts      # Permission utilities
-│   │   ├── geo-constants.ts    # Geo routing constants
-│   │   └── env.ts              # Environment validation
-│   └── server/                 # Server actions
-│       ├── providers.ts        # Provider operations
-│       ├── domains.ts          # Domain operations
-│       ├── records.ts          # Record operations
-│       ├── monitoring.ts       # DNS monitoring
-│       ├── alerts.ts           # Alert notifications
-│       ├── geo-routing.ts      # Geo routing
-│       └── users.ts            # User management
-├── messages/                   # Translation files
-│   ├── en.json                 # English
-│   ├── zh-CN.json              # Simplified Chinese
-│   └── ja.json                 # Japanese
-├── data/                       # SQLite database
-└── drizzle.config.ts           # Drizzle config
-```
-
-## DNS Provider Architecture
-
-The system uses an adapter pattern to support multiple DNS providers:
-
-```typescript
-interface IDNSProvider {
-  readonly meta: ProviderMeta;
-  validateCredentials(): Promise<boolean>;
-  listDomains(): Promise<ProviderDomain[]>;
-  getDomain(domainId: string): Promise<ProviderDomain>;
-  listRecords(domainId: string): Promise<ProviderRecord[]>;
-  createRecord(domainId: string, record: CreateRecordInput): Promise<ProviderRecord>;
-  updateRecord(domainId: string, recordId: string, record: UpdateRecordInput): Promise<ProviderRecord>;
-  deleteRecord(domainId: string, recordId: string): Promise<void>;
-}
-```
-
-### Adding a New Provider
-
-1. Create a new adapter file in `src/lib/providers/`
-2. Implement the `IDNSProvider` interface
-3. Register the provider in `src/lib/providers/index.ts`
-
-## Scripts
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
+npm run dev          # Development server
+npm run build        # Production build
+npm run start        # Production server
 npm run db:push      # Push schema to database
 npm run db:studio    # Open Drizzle Studio
-npm run db:generate  # Generate migrations
 ```
 
-## Roadmap
+---
 
-### Phase 1 (MVP) ✅
+## 🤝 Contributing
 
-- [x] Project setup (Next.js, shadcn/ui, Drizzle)
-- [x] Authentication (NextAuth.js + GitHub)
-- [x] Dashboard layout
-- [x] Cloudflare provider adapter
-- [x] Domain and record management UI
-
-### Phase 2 ✅
-
-- [x] Aliyun DNS adapter
-- [x] DNSPod adapter
-- [x] Internationalization (EN/ZH/JA)
-- [x] Batch operations (import/export)
-- [x] Operation logs UI
-- [x] Multi-user management with permissions
-
-### Phase 3 ✅
-
-- [x] DNS monitoring (availability, latency, correctness checks)
-- [x] Change detection (track DNS record changes during sync)
-- [x] Alert notifications (Webhook, Discord, Telegram)
-- [x] Smart DNS (geo-routing with region/country targeting)
-
-### Phase 4 (Planned)
-
-- [ ] AWS Route53 provider adapter
-- [ ] GoDaddy provider adapter
-- [ ] DNS DNSSEC management
-- [ ] API access tokens for automation
-- [ ] Scheduled DNS record updates
-- [ ] DNS template management
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create your feature branch (`git checkout -b feature/amazing`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing`)
 5. Open a Pull Request
 
-## License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 📄 License
 
-## Acknowledgments
+MIT License - see [LICENSE](LICENSE) for details.
 
-- [Next.js](https://nextjs.org/) - The React Framework
-- [shadcn/ui](https://ui.shadcn.com/) - Beautiful UI components
-- [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM
-- [NextAuth.js](https://authjs.dev/) - Authentication for Next.js
-- [next-intl](https://next-intl-docs.vercel.app/) - Internationalization for Next.js
+---
+
+<div align="center">
+
+**Built with ❤️ using Next.js, shadcn/ui, and Drizzle ORM**
+
+</div>
