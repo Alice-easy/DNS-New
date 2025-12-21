@@ -103,6 +103,9 @@ npm install
 cp .env.example .env
 # .env を編集: AUTH_SECRET="your-secret-key"
 
+# データディレクトリ作成（SQLite 用）
+mkdir -p data
+
 # データベース初期化
 npm run db:push
 

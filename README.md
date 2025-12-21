@@ -103,6 +103,9 @@ npm install
 cp .env.example .env
 # Edit .env: AUTH_SECRET="your-secret-key"
 
+# Create data directory (for SQLite)
+mkdir -p data
+
 # Database
 npm run db:push
 

@@ -103,6 +103,9 @@ npm install
 cp .env.example .env
 # 编辑 .env: AUTH_SECRET="your-secret-key"
 
+# 创建数据目录（SQLite 需要）
+mkdir -p data
+
 # 初始化数据库
 npm run db:push
 
