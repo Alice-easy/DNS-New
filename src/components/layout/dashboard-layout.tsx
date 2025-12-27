@@ -74,6 +74,10 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         href={item.href}
         className={cn(
           "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+          // 移动端优化: 更大的点击区域
+          "lg:py-2.5 py-3",
+          // 触摸反馈
+          "active:scale-[0.98]",
           isActive
             ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
             : cn(
@@ -88,10 +92,12 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       >
         <item.icon className={cn(
           "h-4 w-4 transition-transform duration-200",
+          // 移动端图标稍大
+          "lg:h-4 lg:w-4 h-5 w-5",
           "group-hover:scale-110",
           isActive && "drop-shadow-sm"
         )} />
-        {t(item.titleKey)}
+        <span className="text-sm lg:text-sm text-base">{t(item.titleKey)}</span>
       </Link>
     );
   };
@@ -170,7 +176,14 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-64 p-0">
+        <SheetContent
+          side="left"
+          className={cn(
+            "w-full sm:w-80 p-0",
+            "border-r border-border/50",
+            "bg-gradient-to-b from-card/95 to-card/90 backdrop-blur-lg"
+          )}
+        >
           <SidebarContent />
         </SheetContent>
       </Sheet>
@@ -183,7 +196,14 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             {/* Mobile menu button */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "lg:hidden",
+                    "hover:bg-accent/50 active:scale-95 transition-transform"
+                  )}
+                >
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
