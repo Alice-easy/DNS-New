@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface NavItem {
   titleKey: "dashboard" | "providers" | "domains" | "records" | "monitoring" | "alerts" | "changes" | "logs" | "settings" | "admin";
@@ -72,14 +73,24 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       <Link
         href={item.href}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+          "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
           isActive
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+            : cn(
+                "text-muted-foreground/80 hover:text-foreground",
+                "hover:bg-accent/50 hover:shadow-sm",
+                "before:absolute before:left-0 before:h-0 before:w-0.5",
+                "before:bg-primary before:transition-all before:duration-200",
+                "hover:before:h-full"
+              )
         )}
         onClick={() => setSidebarOpen(false)}
       >
-        <item.icon className="h-4 w-4" />
+        <item.icon className={cn(
+          "h-4 w-4 transition-transform duration-200",
+          "group-hover:scale-110",
+          isActive && "drop-shadow-sm"
+        )} />
         {t(item.titleKey)}
       </Link>
     );
@@ -153,7 +164,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   return (
     <div className="flex min-h-screen">
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 flex-shrink-0 border-r bg-card lg:block">
+      <aside className="hidden w-[220px] flex-shrink-0 border-r border-border/50 bg-gradient-to-b from-card/80 to-card/50 backdrop-blur-md lg:block">
         <SidebarContent />
       </aside>
 
@@ -167,7 +178,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       {/* Main Content */}
       <div className="flex flex-1 flex-col">
         {/* Top Bar */}
-        <header className="flex h-14 items-center justify-between gap-4 border-b bg-card px-4">
+        <header className="sticky top-0 z-50 flex h-14 items-center justify-between gap-4 border-b border-border/40 bg-card/80 backdrop-blur-lg px-4 shadow-sm">
           <div className="flex items-center gap-4">
             {/* Mobile menu button */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -187,12 +198,15 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           {/* Language Switcher - always visible */}
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
+            <ThemeToggle />
           </div>
         </header>
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-background">
-          <div className="container mx-auto p-6">{children}</div>
+          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>
