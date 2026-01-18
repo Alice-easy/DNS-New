@@ -316,7 +316,14 @@ export function RegisterForm({ emailVerificationRequired }: RegisterFormProps) {
 
           {/* Step: Registration form */}
           {step === "register" && (
-            <form action={handleRegisterSubmit} className="space-y-4">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                await handleRegisterSubmit(formData);
+              }}
+              className="space-y-4"
+            >
               {/* Show verified email badge if from verification flow */}
               {emailVerificationRequired && (
                 <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/50 rounded-lg border border-green-200 dark:border-green-900">

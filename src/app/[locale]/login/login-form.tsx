@@ -139,7 +139,14 @@ export function LoginForm({ oauthStatus }: LoginFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Credentials Login Form */}
-          <form action={onCredentialsSubmit} className="space-y-4">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              await onCredentialsSubmit(formData);
+            }}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="identifier">{t("email")}</Label>
               <Input

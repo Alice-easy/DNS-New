@@ -80,7 +80,14 @@ export function AddProviderForm({ availableProviders }: AddProviderFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        await handleSubmit(formData);
+      }}
+      className="space-y-6"
+    >
       {/* Provider Selection */}
       <Card>
         <CardHeader>
