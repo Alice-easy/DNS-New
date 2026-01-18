@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Server, Globe, FileText, Plus, ArrowRight, Zap, Settings, Radar, Activity } from "lucide-react";
+import { Globe, Plus, ArrowRight, Zap, Settings, Radar, Activity } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
         <StatCard
           title={tNav("providers")}
           value={stats.providers}
-          icon={Server}
+          icon="server"
           color="blue"
           trend={{ value: 12, label: "较上月" }}
         />
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
         <StatCard
           title={tNav("domains")}
           value={stats.domains}
-          icon={Globe}
+          icon="globe"
           color="green"
           trend={{ value: 8, label: "较上月" }}
         />
@@ -100,7 +100,7 @@ export default async function DashboardPage() {
         <StatCard
           title={tNav("records")}
           value={stats.records}
-          icon={FileText}
+          icon="fileText"
           color="purple"
           trend={{ value: -3, label: "较上月" }}
         />
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
         <StatCard
           title="系统状态"
           value="正常"
-          icon={Activity}
+          icon="activity"
           color="orange"
         />
       </div>

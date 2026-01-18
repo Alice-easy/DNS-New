@@ -1,13 +1,44 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, Minus, LucideIcon } from "lucide-react"
+import {
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Server,
+  Globe,
+  FileText,
+  Activity,
+  Users,
+  Shield,
+  Bell,
+  Settings,
+  Database,
+  Zap,
+  type LucideIcon
+} from "lucide-react"
 import { cn } from "@/lib/utils"
+
+// Icon mapping for Server Component compatibility
+const iconMap: Record<string, LucideIcon> = {
+  server: Server,
+  globe: Globe,
+  fileText: FileText,
+  activity: Activity,
+  users: Users,
+  shield: Shield,
+  bell: Bell,
+  settings: Settings,
+  database: Database,
+  zap: Zap,
+}
+
+export type IconName = keyof typeof iconMap
 
 interface StatCardProps {
   title: string
   value: string | number
-  icon: LucideIcon
+  icon: IconName
   trend?: {
     value: number
     label: string
@@ -19,11 +50,12 @@ interface StatCardProps {
 export function StatCard({
   title,
   value,
-  icon: Icon,
+  icon,
   trend,
   chart,
   color = "blue"
 }: StatCardProps) {
+  const Icon = iconMap[icon] || Activity
   const colorClasses = {
     blue: "from-blue-500/10 to-blue-500/5 text-blue-600 dark:text-blue-400",
     green: "from-green-500/10 to-green-500/5 text-green-600 dark:text-green-400",
