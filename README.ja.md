@@ -8,6 +8,8 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle-0.45-C5F74F?logo=drizzle)](https://orm.drizzle.team/)
 
 [![GitHub stars](https://img.shields.io/github/stars/Alice-easy/DNS-New?style=social)](https://github.com/Alice-easy/DNS-New/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/Alice-easy/DNS-New?style=social)](https://github.com/Alice-easy/DNS-New/network/members)
@@ -20,96 +22,160 @@
 
 ---
 
-## ✨ 機能
+## 📖 概要
 
-複数の DNS プロバイダーを一つの直感的なダッシュボードに統合する、モダンな統合 DNS 管理プラットフォーム。
+DNS Manager は、複数の DNS プロバイダーを直感的なダッシュボードに統合した、モダンでオープンソースの DNS 管理プラットフォームです。**Next.js 16**、**React 19**、**TypeScript** で構築され、型安全で高性能なクロスプロバイダー DNS レコード管理ソリューションを提供します。
 
-### 🔌 マルチプロバイダー対応
+### ✨ 主な特徴
 
-| プロバイダー | 状態 | スマートライン |
-|:------------:|:----:|:--------------:|
-| Cloudflare | ✅ | - |
-| Aliyun DNS | ✅ | ✅ 電信/聯通/移動/教育網 |
-| Tencent DNSPod | ✅ | ✅ 電信/聯通/移動/海外 |
-| AWS Route53 | ✅ | ✅ ジオルーティング |
-| Huawei Cloud | ✅ | ✅ 電信/聯通/移動 |
-| GoDaddy | ✅ | - |
-| Namecheap | ✅ | - |
+- 🔌 **7つの DNS プロバイダー** — Cloudflare、Aliyun、DNSPod、Route53、Huawei Cloud、GoDaddy、Namecheap
+- 🗄️ **4種類のデータベース** — SQLite、PostgreSQL、MySQL、Turso (エッジ)
+- 🌍 **3言語対応** — English、简体中文、日本語
+- 🔐 **エンタープライズセキュリティ** — AES-256-GCM 暗号化、OAuth2、RBAC
 
-### 🗄️ マルチデータベース対応
+<!--
+### 📸 スクリーンショット
 
-| データベース | タイプ | エッジ対応 | 推奨用途 |
-|:------------:|:------:|:----------:|:--------:|
-| SQLite | ファイル | ❌ | ローカル / VPS |
-| PostgreSQL | サーバー | ✅ | 本番環境 |
-| MySQL | サーバー | ❌ | 本番環境 |
-| Turso (libSQL) | エッジ | ✅ | Vercel / Cloudflare |
+> スクリーンショットは近日公開予定！ローカルで実行して UI をプレビューできます。
+
+<details>
+<summary>スクリーンショットを表示</summary>
+
+| ダッシュボード | ドメイン管理 | レコードエディター |
+|:-------------:|:-----------:|:-----------------:|
+| ![Dashboard](./docs/screenshots/dashboard.png) | ![Domains](./docs/screenshots/domains.png) | ![Records](./docs/screenshots/records.png) |
+
+</details>
+-->
+
+---
+
+## 🎯 機能
+
+### 🔌 マルチプロバイダーサポート
+
+| プロバイダー | 状態 | スマートライン | API ドキュメント |
+|:----------:|:----:|:-------------:|:--------------:|
+| Cloudflare | ✅ | — | [Docs](https://developers.cloudflare.com/api/) |
+| Aliyun DNS | ✅ | ✅ 電信/聯通/移動/教育網 | [Docs](https://help.aliyun.com/document_detail/29739.html) |
+| Tencent DNSPod | ✅ | ✅ 電信/聯通/移動/海外 | [Docs](https://cloud.tencent.com/document/api/1427/56153) |
+| AWS Route53 | ✅ | ✅ 地理ルーティング | [Docs](https://docs.aws.amazon.com/Route53/latest/APIReference/) |
+| Huawei Cloud | ✅ | ✅ 電信/聯通/移動 | [Docs](https://support.huaweicloud.com/api-dns/dns_api_60001.html) |
+| GoDaddy | ✅ | — | [Docs](https://developer.godaddy.com/doc/endpoint/domains) |
+| Namecheap | ✅ | — | [Docs](https://www.namecheap.com/support/api/intro/) |
+
+### 🗄️ マルチデータベースサポート
+
+| データベース | タイプ | エッジ互換 | 推奨用途 | 接続方法 |
+|:----------:|:-----:|:---------:|:-------:|:-------:|
+| SQLite | ファイル | ❌ | ローカル / VPS | `better-sqlite3` |
+| PostgreSQL | サーバー | ✅ | 本番環境 | `postgres` |
+| MySQL | サーバー | ❌ | 本番環境 | `mysql2` |
+| Turso | エッジ | ✅ | Vercel / CF | `@libsql/client` |
 
 ### 🛡️ コア機能
 
-- **📊 統合ダッシュボード** — すべてのプロバイダー、ドメイン、レコードを一元管理
-- **🔐 セキュア認証** — GitHub OAuth + メール/パスワード（NextAuth.js v5）
-- **🌍 国際化** — English、简体中文、日本語
-- **📱 レスポンシブデザイン** — デスクトップ、タブレット、モバイル対応
-- **🔄 リアルタイム同期** — プロバイダーからドメインとレコードを同期
-- **📝 監査ログ** — 完全な操作履歴追跡
+| カテゴリ | 機能 |
+|:-------|:----|
+| **DNS 管理** | フル CRUD (A/AAAA/CNAME/MX/TXT/NS/CAA/SRV)、スマートライン、一括インポート/エクスポート、変更検出 |
+| **認証** | GitHub/Google/Discord/Gitee OAuth、メール/パスワード、NextAuth.js v5 |
+| **マルチユーザー** | ロール管理 (管理者/ユーザー)、ドメイン共有、きめ細かい権限 |
+| **監視** | DNS 可用性チェック、遅延監視、正確性検証 |
+| **アラート** | 設定可能なルール、Webhook/Discord/Telegram 通知 |
+| **セキュリティ** | AES-256-GCM 暗号化、レート制限、入力検証、強力なパスワードポリシー |
 
-### 📋 DNS 管理
+---
 
-- **フル CRUD** — A、AAAA、CNAME、MX、TXT、NS、CAA、SRV レコード
-- **スマートライン** — 中国キャリア向け ISP ベースルーティング（電信/聯通/移動）
-- **一括インポート/エクスポート** — JSON、CSV 形式対応
-- **変更検出** — 同期時の変更を追跡
+## 🏗️ アーキテクチャ
 
-### 👥 マルチユーザー & 権限
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            フロントエンド                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐ │
+│  │   Next.js   │  │   React 19  │  │  shadcn/ui  │  │   Tailwind 4    │ │
+│  │  App Router │  │             │  │             │  │                 │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Server Actions                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐ │
+│  │   records   │  │   domains   │  │  providers  │  │   monitoring    │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────┘ │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐ │
+│  │   alerts    │  │ audit-logs  │  │    admin    │  │   auth/users    │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    ▼               ▼               ▼
+┌─────────────────────────┐ ┌─────────────┐ ┌─────────────────────────────┐
+│    DNS プロバイダー       │ │ データベース │ │       認証プロバイダー        │
+│  ┌───────┐ ┌─────────┐  │ │  Drizzle    │ │  ┌────────┐  ┌───────────┐  │
+│  │  CF   │ │ Aliyun  │  │ │    ORM      │ │  │ GitHub │  │  Google   │  │
+│  └───────┘ └─────────┘  │ │      │      │ │  └────────┘  └───────────┘  │
+│  ┌───────┐ ┌─────────┐  │ │      ▼      │ │  ┌────────┐  ┌───────────┐  │
+│  │DNSPod │ │ Route53 │  │ │ ┌───────┐   │ │  │Discord │  │   Gitee   │  │
+│  └───────┘ └─────────┘  │ │ │SQLite │   │ │  └────────┘  └───────────┘  │
+│  ┌───────┐ ┌─────────┐  │ │ │PgSQL  │   │ └─────────────────────────────┘
+│  │Huawei │ │ GoDaddy │  │ │ │MySQL  │   │
+│  └───────┘ └─────────┘  │ │ │Turso  │   │
+│  ┌───────────────────┐  │ │ └───────┘   │
+│  │    Namecheap      │  │ └─────────────┘
+│  └───────────────────┘  │
+└─────────────────────────┘
+```
 
-- **ロール管理** — 管理者とユーザーロール
-- **ドメイン共有** — 詳細な権限設定で共有
-- **アクセスレベル** — オーナー / フルコントロール / 編集 / 読み取り専用
+---
 
-### 📡 監視 & アラート
+## 🛠️ 技術スタック
 
-- **DNS 監視** — 可用性、レイテンシ、正確性チェック
-- **アラートルール** — 設定可能なしきい値とトリガー
-- **通知チャンネル** — Webhook、Discord、Telegram
-
-### 🔒 セキュリティ
-
-- **AES-256-GCM** — 認証情報の暗号化保存
-- **レート制限** — ブルートフォース攻撃対策
-- **入力検証** — API 呼び出し前の DNS レコード検証
-- **強力なパスワードポリシー** — 8文字以上、大文字小文字と数字を含む
+| カテゴリ | 技術 |
+|:-------|:----|
+| **フレームワーク** | Next.js 16 (App Router + Turbopack) |
+| **UI ライブラリ** | React 19.2.1 |
+| **言語** | TypeScript 5.0 |
+| **スタイリング** | Tailwind CSS 4 + shadcn/ui + Radix UI |
+| **データベース** | Drizzle ORM 0.45 (SQLite / PostgreSQL / MySQL / Turso) |
+| **認証** | NextAuth.js v5 (beta.30) |
+| **バリデーション** | Zod 4.2 + React Hook Form 7.68 |
+| **国際化** | next-intl 4.6 |
+| **アイコン** | Lucide React |
+| **通知** | Sonner |
+| **メール** | Nodemailer |
 
 ---
 
 ## 🚀 クイックスタート
 
-### 前提条件
+### 必要条件
 
-- Node.js 20+
-- npm または pnpm
+- **Node.js** 20+ (LTS 推奨)
+- **npm**、**pnpm**、または **bun**
 
 ### インストール
 
 ```bash
-# クローン
+# リポジトリをクローン
 git clone https://github.com/Alice-easy/DNS-New.git
 cd DNS-New
 
-# インストール
+# 依存関係をインストール
 npm install
 
-# 設定（AUTH_SECRET のみ必須！）
+# 環境設定（AUTH_SECRET のみ必須！）
 cp .env.example .env
-# .env を編集: AUTH_SECRET="your-secret-key"
+# シークレットを生成: openssl rand -base64 32
+# .env を編集して AUTH_SECRET を設定
 
-# データディレクトリ作成（SQLite 用）
+# データディレクトリを作成（SQLite 用）
 mkdir -p data
 
-# データベース初期化
+# データベースを初期化
 npm run db:push
 
-# 起動
+# 開発サーバーを起動
 npm run dev
 ```
 
@@ -118,88 +184,335 @@ npm run dev
 ### ワンライナーデプロイ
 
 ```bash
-cp .env.example .env && \
+git clone https://github.com/Alice-easy/DNS-New.git && cd DNS-New && \
+  cp .env.example .env && \
   sed -i "s/your-secret-key-here/$(openssl rand -base64 32)/" .env && \
-  npm install && npm run db:push && npm run build && npm start
+  npm install && mkdir -p data && npm run db:push && npm run build && npm start
 ```
 
 ---
 
-## ⚙️ 設定
+## 👨‍💻 開発ガイド
 
-### 最小構成
+### プロジェクト構造
 
-必要な環境変数は **1つ** だけ：
-
-```env
-AUTH_SECRET="your-secret-key-here"  # 生成: openssl rand -base64 32
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── api/auth/[...nextauth]/  # NextAuth.js API ルート
+│   └── [locale]/                # 国際化ルート
+│       ├── (dashboard)/         # ダッシュボードルートグループ
+│       │   ├── domains/         # ドメイン管理
+│       │   ├── providers/       # プロバイダー管理
+│       │   ├── records/         # レコード管理
+│       │   ├── monitoring/      # 監視タスク
+│       │   ├── alerts/          # アラートルール
+│       │   ├── admin/           # 管理パネル
+│       │   ├── settings/        # ユーザー設定
+│       │   └── logs/            # 監査ログ
+│       ├── login/               # ログインページ
+│       └── register/            # 登録ページ
+│
+├── components/
+│   ├── ui/                      # shadcn/ui コンポーネント
+│   ├── dashboard/               # ダッシュボードコンポーネント
+│   └── layout/                  # レイアウトコンポーネント
+│
+├── lib/
+│   ├── db/                      # データベース層
+│   │   ├── index.ts            # DB 初期化
+│   │   ├── schema.ts           # SQLite/Turso スキーマ
+│   │   ├── schema-pg.ts        # PostgreSQL スキーマ
+│   │   └── schema-mysql.ts     # MySQL スキーマ
+│   ├── providers/              # DNS プロバイダーアダプター
+│   │   ├── types.ts            # IDNSProvider インターフェース
+│   │   ├── cloudflare.ts       # Cloudflare アダプター
+│   │   ├── alidns.ts           # Aliyun DNS アダプター
+│   │   ├── dnspod.ts           # Tencent DNSPod アダプター
+│   │   ├── route53.ts          # AWS Route53 アダプター
+│   │   ├── huaweicloud.ts      # Huawei Cloud アダプター
+│   │   ├── godaddy.ts          # GoDaddy アダプター
+│   │   └── namecheap.ts        # Namecheap アダプター
+│   ├── auth.ts                 # NextAuth 設定
+│   ├── crypto.ts               # AES-256-GCM 暗号化
+│   └── permissions.ts          # RBAC 権限管理
+│
+├── server/                      # Server Actions
+│   ├── records.ts              # レコード CRUD
+│   ├── domains.ts              # ドメイン操作
+│   ├── providers.ts            # プロバイダー管理
+│   ├── monitoring.ts           # 監視タスク
+│   ├── alerts.ts               # アラート管理
+│   └── audit-logs.ts           # 監査ログ
+│
+├── i18n/                        # 国際化
+│   ├── navigation.ts           # i18n ナビゲーション
+│   └── routing.ts              # ロケールルーティング
+│
+└── messages/                    # 翻訳ファイル
+    ├── en.json                 # 英語
+    ├── zh-CN.json              # 簡体字中国語
+    └── ja.json                 # 日本語
 ```
 
-### オプション：データベースタイプ
+### 新しい DNS プロバイダーの追加
 
-```env
-DATABASE_TYPE="sqlite"  # sqlite（デフォルト）、postgres、mysql、turso
+1. `src/lib/providers/` に新しいアダプターファイルを作成：
+
+```typescript
+// src/lib/providers/my-provider.ts
+import type { IDNSProvider, ProviderMeta } from './types';
+
+export class MyProvider implements IDNSProvider {
+  readonly meta: ProviderMeta = {
+    name: 'MyProvider',
+    supportedRecordTypes: ['A', 'AAAA', 'CNAME', 'MX', 'TXT'],
+    supportsSmartLines: false,
+  };
+
+  constructor(private credentials: MyProviderCredentials) {}
+
+  async validateCredentials(): Promise<boolean> {
+    // 認証情報の検証を実装
+  }
+
+  async listDomains(): Promise<ProviderDomain[]> {
+    // ドメイン一覧を実装
+  }
+
+  async listRecords(domainId: string): Promise<ProviderRecord[]> {
+    // レコード一覧を実装
+  }
+
+  async createRecord(domainId: string, record: CreateRecordInput): Promise<ProviderRecord> {
+    // レコード作成を実装
+  }
+
+  async updateRecord(domainId: string, recordId: string, record: UpdateRecordInput): Promise<ProviderRecord> {
+    // レコード更新を実装
+  }
+
+  async deleteRecord(domainId: string, recordId: string): Promise<void> {
+    // レコード削除を実装
+  }
+}
 ```
 
-### その他の設定
+2. `src/lib/providers/index.ts` に登録
 
-**管理パネル → システム設定** で設定：
-- GitHub OAuth 認証情報
-- データベース接続文字列
-- 暗号化キー
-- その他...
+3. プロバイダー作成フォームに UI サポートを追加
 
----
-
-## 🛠️ 技術スタック
-
-| カテゴリ | 技術 |
-|:---------|:-----|
-| フレームワーク | Next.js 16 (App Router + Turbopack) |
-| 言語 | TypeScript 5.0 |
-| スタイリング | Tailwind CSS 4 + shadcn/ui |
-| データベース | Drizzle ORM (SQLite/PostgreSQL/MySQL/Turso) |
-| 認証 | NextAuth.js v5 |
-| 国際化 | next-intl |
-
----
-
-## 📜 スクリプト
+### 利用可能なスクリプト
 
 ```bash
-npm run dev          # 開発サーバー
+npm run dev          # 開発サーバーを起動 (Turbopack)
 npm run build        # 本番ビルド
-npm run start        # 本番サーバー
+npm run start        # 本番サーバーを起動
+npm run lint         # ESLint を実行
+npm run db:generate  # マイグレーションを生成
+npm run db:migrate   # マイグレーションを実行
 npm run db:push      # スキーマをデータベースにプッシュ
 npm run db:studio    # Drizzle Studio を開く
 ```
 
 ---
 
-## 🤝 コントリビュート
+## 📡 API リファレンス
 
-コントリビュート歓迎！お気軽に Pull Request を提出してください。
+### Server Actions
+
+DNS Manager は従来の REST API の代わりに Next.js Server Actions を使用しています。主要な Actions：
+
+| モジュール | Actions |
+|:---------|:--------|
+| `server/records.ts` | `createRecord`, `updateRecord`, `deleteRecord`, `syncRecords`, `batchImportRecords` |
+| `server/domains.ts` | `getDomains`, `getDomainWithRecords`, `syncDomains` |
+| `server/providers.ts` | `createProvider`, `updateProvider`, `deleteProvider`, `testProvider` |
+| `server/monitoring.ts` | `createMonitorTask`, `updateMonitorTask`, `deleteMonitorTask`, `checkNow` |
+| `server/alerts.ts` | `createAlertRule`, `updateAlertRule`, `deleteAlertRule`, `addNotificationChannel` |
+
+### 認証ルート
+
+| ルート | メソッド | 説明 |
+|:------|:------:|:----|
+| `/api/auth/signin` | POST | サインイン |
+| `/api/auth/signout` | POST | サインアウト |
+| `/api/auth/callback/github` | GET/POST | GitHub OAuth コールバック |
+| `/api/auth/callback/google` | GET/POST | Google OAuth コールバック |
+| `/api/auth/callback/discord` | GET/POST | Discord OAuth コールバック |
+| `/api/auth/callback/gitee` | GET/POST | Gitee OAuth コールバック |
+
+---
+
+## ⚙️ 設定
+
+### 環境変数
+
+| 変数 | 必須 | デフォルト | 説明 |
+|:----|:----:|:--------:|:----|
+| `AUTH_SECRET` | ✅ | — | NextAuth.js シークレットキー |
+| `DATABASE_TYPE` | ❌ | `sqlite` | `sqlite`, `postgres`, `mysql`, `turso` |
+| `DATABASE_URL` | ❌ | `./data/sqlite.db` | データベース接続文字列 |
+| `TURSO_DATABASE_URL` | ❌ | — | Turso データベース URL |
+| `TURSO_AUTH_TOKEN` | ❌ | — | Turso 認証トークン |
+
+### 管理パネル設定
+
+その他の設定は **管理パネル → システム設定** で構成できます：
+
+- OAuth プロバイダー認証情報（GitHub、Google、Discord、Gitee）
+- SMTP メール設定
+- 認証情報暗号化キー
+- レート制限設定
+
+---
+
+## 🚢 デプロイガイド
+
+### Vercel（推奨）
+
+1. このリポジトリをフォーク
+2. Vercel にインポート
+3. 環境変数を設定：
+   - `AUTH_SECRET`
+   - `DATABASE_TYPE=turso`
+   - `TURSO_DATABASE_URL`
+   - `TURSO_AUTH_TOKEN`
+4. デプロイ
+
+### セルフホスト (VPS)
+
+```bash
+# クローンとセットアップ
+git clone https://github.com/Alice-easy/DNS-New.git
+cd DNS-New
+cp .env.example .env
+# .env を編集して設定
+
+# インストールとビルド
+npm install
+npm run db:push
+npm run build
+
+# PM2 で実行
+npm install -g pm2
+pm2 start npm --name "dns-manager" -- start
+pm2 save
+```
+
+### Docker（近日公開予定）
+
+Docker サポートは将来のリリースで提供予定です。
+
+---
+
+## 🤝 コントリビューション
+
+コントリビューションを歓迎します！以下のガイドラインに従ってください：
+
+### コミット規約
+
+[Conventional Commits](https://www.conventionalcommits.org/) を使用しています：
+
+```
+feat: 新しい DNS プロバイダーサポートを追加
+fix: レコード同期の問題を修正
+docs: API ドキュメントを更新
+style: prettier でコードをフォーマット
+refactor: プロバイダーアダプターを再編成
+test: 暗号化モジュールの単体テストを追加
+chore: 依存関係を更新
+```
+
+### プルリクエストのプロセス
 
 1. リポジトリをフォーク
-2. フィーチャーブランチを作成 (`git checkout -b feature/amazing`)
-3. 変更をコミット (`git commit -m 'Add amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing`)
-5. Pull Request を作成
+2. フィーチャーブランチを作成：`git checkout -b feature/amazing-feature`
+3. 変更を加える
+4. リンティングを実行：`npm run lint`
+5. 変更をコミット：`git commit -m 'feat: add amazing feature'`
+6. ブランチにプッシュ：`git push origin feature/amazing-feature`
+7. プルリクエストを作成
+
+### コードスタイル
+
+- TypeScript strict モードを使用
+- ESLint ルールに従う
+- 意味のある変数名を使用
+- パブリック API に JSDoc コメントを追加
+
+---
+
+## 🗺️ ロードマップ
+
+- [ ] Docker コンテナサポート
+- [ ] 更に多くの DNS プロバイダー（Azure DNS、DigitalOcean、Vultr）
+- [ ] DNSSEC 管理
+- [ ] DNS テンプレート/プリセットシステム
+- [ ] 外部アクセス用の API キー認証
+- [ ] ドメインの一括インポート/エクスポート
+- [ ] 高度な分析ダッシュボード
+
+---
+
+## ❓ よくある質問
+
+<details>
+<summary><strong>Q: 管理者パスワードをリセットするには？</strong></summary>
+
+Drizzle Studio を使用してデータベースを直接変更します：
+```bash
+npm run db:studio
+```
+`users` テーブルに移動してパスワードハッシュを更新します。
+</details>
+
+<details>
+<summary><strong>Q: 複数のデータベースを同時に使用できますか？</strong></summary>
+
+いいえ、DNS Manager は一度に1つのデータベースのみ使用します。ただし、エクスポートとインポートによってデータベース間でデータを移行できます。
+</details>
+
+<details>
+<summary><strong>Q: API 認証情報はどのように保存されますか？</strong></summary>
+
+すべてのプロバイダー認証情報は、データベースに保存される前に AES-256-GCM で暗号化されます。暗号化キーは `CREDENTIALS_ENCRYPTION_KEY` 環境変数から取得されます。
+</details>
+
+<details>
+<summary><strong>Q: API 呼び出しにレート制限はありますか？</strong></summary>
+
+はい、DNS Manager は悪用を防ぐためにレート制限を実装しています。デフォルトの制限は管理パネルで設定できます。
+</details>
 
 ---
 
 ## 📄 ライセンス
 
-MIT ライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照。
+このプロジェクトは **MIT ライセンス** の下でライセンスされています — 詳細は [LICENSE](LICENSE) ファイルをご覧ください。
+
+---
+
+## 🙏 謝辞
+
+- [Next.js](https://nextjs.org/) — React フレームワーク
+- [shadcn/ui](https://ui.shadcn.com/) — 美しい UI コンポーネント
+- [Drizzle ORM](https://orm.drizzle.team/) — TypeScript ORM
+- [NextAuth.js](https://next-auth.js.org/) — Next.js 用認証
+- [Tailwind CSS](https://tailwindcss.com/) — ユーティリティファースト CSS
 
 ---
 
 <div align="center">
 
-**Next.js、shadcn/ui、Drizzle ORM で ❤️ を込めて構築**
+**コミュニティによって ❤️ で構築**
 
 <br />
 
 [![Made by Alice](https://img.shields.io/badge/Made%20by-Alice--easy-blueviolet?logo=github)](https://github.com/Alice-easy)
+
+<br />
+
+⭐ 役に立ったらスターをお願いします！
 
 </div>
